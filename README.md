@@ -103,4 +103,4 @@ class Shop:
     Save()
     Load()
 
-!(scheme.png)
+![](scheme.png)
