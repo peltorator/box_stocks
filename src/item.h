@@ -6,7 +6,7 @@ private:
     uint64 Weight;
     uint64 Volume;
 public:
-    Item(const uint64 itemID, const uint64 weight, const uint64 volume)
+    TItem(const uint64 itemID, const uint64 weight, const uint64 volume)
         : ItemID(itemID), Weight(weight), Volume(volume) {}
 
     uint32 GetItemID() const {

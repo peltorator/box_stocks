@@ -7,7 +7,7 @@ private:
     uint64 MaxVolume;
     uint64 Cost;
 public:
-    Box(const uint64 boxID, const uint64 maxWeight, const uint64 maxVolume, const uint64 cost)
+    TBox(const uint64 boxID, const uint64 maxWeight, const uint64 maxVolume, const uint64 cost)
         : BoxID(boxID), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost) {}
 
     uint64 GetBoxID() const {
