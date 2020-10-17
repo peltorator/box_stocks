@@ -71,26 +71,31 @@ dp[mask] -- минимальная стоимость доставить тов�
 # Схема программы:
 
 class Box:
+
     boxId
     maxWeight
     maxVolume
     cost
 
 class Item:
+
     itemId
     weight
     volume
 
 class FilledBox:
+
     Box
     [Item]
 
 class Order:
+
     items (map: Item -> cnt)
     
     Finalize() -> [FilledBox]
 
 class Shop:
+
     [Box]
     [Item]
     Order
