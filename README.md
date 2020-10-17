@@ -88,18 +88,13 @@ class FilledBox:
     Box
     [Item]
 
-class Order:
-
-    items (map: Item -> cnt)
-    
-    Finalize() -> [FilledBox]
-
 class Shop:
 
     [Box]
     [Item]
     Order
     map: Item -> totalCnt
+    map: Item -> curCnt
     
     Init(items, boxes)
     addItem(itemId)
