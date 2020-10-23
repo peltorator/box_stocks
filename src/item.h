@@ -1,23 +1,26 @@
 #pragma once
+#include <cstdint>
 
 class TItem {
 private:
-    uint64 ItemID;
-    uint64 Weight;
-    uint64 Volume;
+    uint64_t ItemID;
+    uint64_t Weight;
+    uint64_t Volume;
 public:
-    TItem(const uint64 itemID, const uint64 weight, const uint64 volume)
+    TItem(const uint64_t itemID, const uint64_t weight, const uint64_t volume)
         : ItemID(itemID), Weight(weight), Volume(volume) {}
 
-    uint32 GetItemID() const {
+    TItem() : ItemID(0), Weight(0), Volume(0) {}
+
+    uint64_t GetItemID() const {
         return ItemID;
     }
 
-    uint64 GetWeight() const {
+    uint64_t GetWeight() const {
         return Weight;
     }
 
-    uint64 GetVolume() const {
+    uint64_t GetVolume() const {
         return Volume;
     }
 };

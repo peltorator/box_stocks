@@ -6,7 +6,7 @@
 
 class TFilledBox {
 private:
-    typedef TItemContainer std::list<TItem>;
+    typedef std::list<TItem> TItemContainer;
 
     TBox Box;
     TItemContainer Items;

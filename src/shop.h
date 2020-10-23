@@ -3,26 +3,24 @@
 #include "filled_box.h"
 #include <list>
 #include <unordered_map>
+#include <vector>
 
 class TShop {
 private:
-    typedef TBoxContainer std::list<Box>;
+    typedef std::vector<TBox> TBoxContainer;
 
-    TBoxConteiner Boxes;
-    std::unordered_map<uint64, Item> Items;
-    std::unordered_map<uint64, uint32> AvailableAmounts;
-    std::unordered_map<uint64, uint32> OrderAmounts;
+    TBoxContainer Boxes;
+    std::unordered_map<uint64_t, TItem> Items;
+    std::unordered_map<uint64_t, uint32_t> AvailableAmounts;
+    std::unordered_map<uint64_t, uint32_t> OrderAmounts;
+
+    const uint64_t INF_COST = std::numeric_limits<uint64_t>::max();
 public:
-    TShop(const std::list<std::pair<Item, uint32>> items) {
-        for (const auto& [item, amount] : items) {
-            Items[item.ItemID] = item;
-            AvailableAmounts[item.ItemID] = amount;
-        }
-    }
+    TShop(const std::list<std::pair<TItem, uint32_t>> items);
 
-    void AddItem(const uint64 itemID);
+    void AddItem(const uint64_t itemID);
 
-    void DeleteItem(consts uint64 itemID);
+    void DeleteItem(const uint64_t itemID);
 
     std::list<TFilledBox> Buy();
 

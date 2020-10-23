@@ -1,28 +1,29 @@
 #pragma once
+#include <cstdint>
 
 class TBox {
 private:
-    uint64 BoxID;
-    uint64 MaxWeight;
-    uint64 MaxVolume;
-    uint64 Cost;
+    uint64_t BoxID;
+    uint64_t MaxWeight;
+    uint64_t MaxVolume;
+    uint64_t Cost;
 public:
-    TBox(const uint64 boxID, const uint64 maxWeight, const uint64 maxVolume, const uint64 cost)
+    TBox(const uint64_t boxID, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost)
         : BoxID(boxID), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost) {}
 
-    uint64 GetBoxID() const {
+    uint64_t GetBoxID() const {
         return BoxID;
     }
 
-    uint64 GetMaxWeight() const {
+    uint64_t GetMaxWeight() const {
         return MaxWeight;
     }
 
-    uint64 GetMaxVolume() const {
+    uint64_t GetMaxVolume() const {
         return MaxVolume;
     }
 
-    uint64 GetCost() const {
+    uint64_t GetCost() const {
         return Cost;
     }
 };
