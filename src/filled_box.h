@@ -2,11 +2,11 @@
 
 #include "box.h"
 #include "item.h"
-#include <list>
+#include <vector>
 
 class TFilledBox {
 private:
-    typedef std::list<TItem> TItemContainer;
+    typedef std::vector<TItem> TItemContainer;
 
     TBox Box;
     TItemContainer Items;

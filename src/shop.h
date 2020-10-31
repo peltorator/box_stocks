@@ -1,9 +1,8 @@
 #pragma once
 
 #include "filled_box.h"
-#include <list>
-#include <unordered_map>
 #include <vector>
+#include <unordered_map>
 
 class TShop {
 private:
@@ -16,13 +15,13 @@ private:
 
     const uint64_t INF_COST = std::numeric_limits<uint64_t>::max();
 public:
-    TShop(const std::list<std::pair<TItem, uint32_t>> items);
+    TShop(const std::vector<std::pair<TItem, uint32_t>> items, const TBoxContainer boxes);
 
     void AddItem(const uint64_t itemID);
 
     void DeleteItem(const uint64_t itemID);
 
-    std::list<TFilledBox> Buy();
+    std::vector<TFilledBox> Buy();
 
     void Save();
 
