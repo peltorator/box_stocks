@@ -17,7 +17,11 @@ public:
         return Box;
     }
 
-    TItemContainer GetItems() const {
+    const TItemContainer& GetItems() const {
         return Items;
+    }
+
+    bool operator == (const TFilledBox& other) const {
+        return Box == other.GetBox() && Items == other.GetItems();
     }
 };

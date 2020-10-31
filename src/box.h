@@ -26,4 +26,8 @@ public:
     uint64_t GetCost() const {
         return Cost;
     }
+
+    bool operator == (const TBox& other) const {
+        return BoxID == other.GetBoxID() && MaxWeight == other.GetMaxWeight() && MaxVolume == other.GetMaxVolume() && Cost == other.GetCost();
+    }
 };

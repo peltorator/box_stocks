@@ -23,4 +23,8 @@ public:
     uint64_t GetVolume() const {
         return Volume;
     }
+
+    bool operator == (const TItem& other) const {
+        return ItemID == other.GetItemID() && Weight == other.GetWeight() && Volume == other.GetVolume();
+    }
 };
