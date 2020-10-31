@@ -12,17 +12,17 @@ const string PASSWORD = "isaf27";
 
 string ChooseMode() {
     while (true) {
-        cout << "Выберите режим работы (" << ADMIN << " или " << USER << ")" << endl;
+        cout << "\nВыберите режим работы (" << ADMIN << " или " << USER << ")" << endl;
         string mode;
         while (true) {
             getline(cin, mode);
             if (mode == ADMIN || mode == USER) {
                 break;
             }
-            cout << "Некорректный режим работы. Выберите режим работы из предложенных вариантов: " << ADMIN << " или " << USER << endl;
+            cout << "\nНекорректный режим работы. Выберите режим работы из предложенных вариантов: " << ADMIN << " или " << USER << endl;
         }
         if (mode == ADMIN) {
-            cout << "Для входа в режим администратора необходимо ввести пароль:" << endl;
+            cout << "\nДля входа в режим администратора необходимо ввести пароль:" << endl;
             string userPassword;
             size_t iter = 0;
             while (true) {
@@ -31,22 +31,24 @@ string ChooseMode() {
                 if (PASSWORD == userPassword) {
                     break;
                 }
-                if (iter == 1) {
-                    cout << "Неверный пароль. Попробуйте еще раз" << endl;
+                if (iter <= 2) {
+                    cout << "\nНеверный пароль. Попробуйте еще раз" << endl;
                 } else {
-                    cout << "Пароль снова неверный. Если вы не знаете пароль, попробуйте режим пользователя.\n";
-                    cout << "Продолжить вводить пароль (continue) или выбрать режим работы заново (restart)?" << endl;
+                    cout << "\nПароль снова неверный. Если вы не знаете пароль, попробуйте режим пользователя.";
+                    cout << "\nПродолжить вводить пароль (continue) или выбрать режим работы заново (restart)?" << endl;
                     string decision;
                     while (true) {
                         getline(cin, decision);
                         if (decision == "continue" || decision == "restart") {
                             break;
                         }
-                        cout << "Неверная опция. Продолжить вводить пароль (continue) или выбрать режим работы заново (restart)?" << endl;
+                        cout << "\nНеверная опция. Продолжить вводить пароль (continue) или выбрать режим работы заново (restart)?" << endl;
                     }
                     if (decision == "continue") {
+                        cout << "\nВведите пароль:" << endl;
                         continue;
                     } else {
+                        cout << "\nЗавершение режима администратора." << endl;
                         break;
                     }
                 }
@@ -57,17 +59,17 @@ string ChooseMode() {
                 continue;
             }
         } else {
-            cout << "Вы выбрали режим работы " << USER << endl;
+            cout << "\nВы выбрали режим работы " << USER << endl;
             return USER;
         }
     }
 }
 
 void HelpGetItems() {
-    cout << "Введите список товаров на складе в формате\n";
-    cout << "\"AddItem <ItemID> <ItemWeight> <ItemVolume> <Quantity>\"\n";
-    cout << "В случае необходимости, вы можете вызвать помощь при помощи команды \"Help\"\n";
-    cout << "Для завершения ввода товаров воспользуйтесь командой \"Quit\"" << endl;
+    cout << "\nВведите список товаров на складе в формате";
+    cout << "\n\"AddItem <ItemID> <ItemWeight> <ItemVolume> <Quantity>\".";
+    cout << "\nВ случае необходимости, вы можете вызвать помощь при помощи команды \"Help\".";
+    cout << "\nДля завершения ввода товаров воспользуйтесь командой \"Quit\"." << endl;
 }
 
 vector<pair<TItem, uint32_t>> GetItems() {
@@ -81,12 +83,14 @@ vector<pair<TItem, uint32_t>> GetItems() {
             uint32_t quantity;
             cin >> itemID >> weight >> volume >> quantity;
             ans.push_back({TItem(itemID, weight, volume), quantity});
+            cout << "\nТовар успешно добавлен на склад." << endl;
         } else if (type == "Help") {
             HelpGetItems();
         } else if (type == "Quit") {
+            cout << "\nВвод товаров завершен." << endl;
             break;
         } else {
-            cout << "Неизвестная команда\n\n";
+            cout << "\nНеизвестная команда\n";
             HelpGetItems();
         }
     }
@@ -94,10 +98,10 @@ vector<pair<TItem, uint32_t>> GetItems() {
 }
 
 void HelpGetBoxes() {
-    cout << "Введите список коробок на складе в формате\n";
-    cout << "\"AddBox <BoxID> <MaxWeight> <MaxVolume> <Cost>\"\n";
-    cout << "В случае необходимости, вы можете вызвать помощь при помощи команды \"Help\"\n";
-    cout << "Для завершения ввода коробок воспользуйтесь командой \"Quit\"" << endl;
+    cout << "\nВведите список коробок на складе в формате";
+    cout << "\n\"AddBox <BoxID> <MaxWeight> <MaxVolume> <Cost>\".";
+    cout << "\nВ случае необходимости, вы можете вызвать помощь при помощи команды \"Help\".";
+    cout << "\nДля завершения ввода коробок воспользуйтесь командой \"Quit\"." << endl;
 }
 
 
@@ -111,12 +115,14 @@ vector<TBox> GetBoxes() {
             uint64_t boxID, maxWeight, maxVolume, cost;
             cin >> boxID >> maxWeight >> maxVolume >> cost;
             ans.push_back(TBox(boxID, maxWeight, maxVolume, cost));
+            cout << "\nКоробка успешно добавлена на склад." << endl;
         } else if (type == "Help") {
             HelpGetBoxes();
         } else if (type == "Quit") {
+            cout << "\nВвод коробок завершен." << endl;
             break;
         } else {
-            cout << "Неизвестная команда\n\n";
+            cout << "\nНеизвестная команда\n";
             HelpGetBoxes();
         }
     }
@@ -160,15 +166,16 @@ pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings() {
 }
 
 void HelpSelectItems(vector<pair<TItem, uint32_t>>& remainingItems) {
-    cout << "Выберите товары, которые вы хотите купить из списка ниже:\n";
-    cout << "ItemID\tItemWeight\tItemVolume\tQuantityRemaining\n";
+    cout << "\nВыберите товары, которые вы хотите купить из списка ниже:\n";
+    cout << "\nItemID\tItemWeight\tItemVolume\tQuantityRemaining\n";
     for (const auto [item, amount] : remainingItems) {
-        cout << item.GetItemID() << "\t\t" << item.GetWeight() << "\t\t" << item.GetVolume() << "\t\t" << amount << '\n';
+        cout << '\n' << item.GetItemID() << "\t\t" << item.GetWeight() << "\t\t" << item.GetVolume() << "\t\t" << amount;
     }
-    cout << "Чтобы добавить товар в корзину, введите команду \"AddItem <ItemID>\"\n";
-    cout << "Чтобы удалить товар из корзины, введите команду \"DeleteItem <ItemID>\"\n";
-    cout << "В случае необходимости, вы можете вызвать помощь при помощи команды \"Help\"\n";
-    cout << "Для завершения ввода товаров воспользуйтесь командой \"Quit\"" << endl;
+    cout << "\n\nЧтобы добавить товар в корзину, введите команду \"AddItem <ItemID>\".";
+    cout << "\nЧтобы удалить товар из корзины, введите команду \"DeleteItem <ItemID>\".";
+    cout << "\nДля просмотра текущей корзиной можно воспользоваться командой \"PrintOrder\".";
+    cout << "\nВ случае необходимости, вы можете вызвать помощь при помощи команды \"Help\".";
+    cout << "\nДля завершения ввода товаров воспользуйтесь командой \"Quit\"." << endl;
 
 }
 
@@ -186,18 +193,18 @@ void SelectItems(TShop& shop, vector<pair<TItem, uint32_t>>& items) {
                 index++;
             }
             if (index == items.size()) {
-                cout << "Товара с таким ID не существует\n\n";
+                cout << "\nТовара с таким ID не существует\n";
                 HelpSelectItems(remainingItems);
                 continue;
             }
             if (remainingItems[index].second == 0) {
-                cout << "Этот товар закончился :(\n\n";
+                cout << "\nЭтот товар уже закончился :(\n";
                 HelpSelectItems(remainingItems);
                 continue;
             }
             shop.AddItem(itemID);
             remainingItems[index].second--;
-            cout << "Товар успешно добавлен в корзину" << endl;
+            cout << "\nТовар успешно добавлен в корзину" << endl;
         } else if (type == "DeleteItem") {
             uint64_t itemID;
             cin >> itemID;
@@ -206,24 +213,40 @@ void SelectItems(TShop& shop, vector<pair<TItem, uint32_t>>& items) {
                 index++;
             }
             if (index == items.size()) {
-                cout << "Товара с таким ID не существует\n\n";
+                cout << "\nТовара с таким ID не существует\n";
                 HelpSelectItems(remainingItems);
                 continue;
             }
             if (remainingItems[index].second == items[index].second) {
-                cout << "Этого товара нет в вашей корзине :(\n\n";
+                cout << "\nЭтого товара нет в вашей корзине :(\n";
                 HelpSelectItems(remainingItems);
                 continue;
             }
             shop.DeleteItem(itemID);
             remainingItems[index].second++;
-            cout << "Товар успешно удален из корзины" << endl;
+            cout << "\nТовар успешно удален из корзины" << endl;
+        } else if (type == "PrintOrder") {
+            cout << "\nВаша корзина:";
+            cout << "\nItemID\tQuantity\n";
+            bool orderIsEmpty = true;
+            for (size_t index = 0; index < items.size(); index++) {
+                if (items[index].second > remainingItems[index].second) {
+                    orderIsEmpty = false;
+                    cout << '\n' << items[index].first.GetItemID() << "\t\t" << items[index].second - remainingItems[index].second;
+                }
+            }
+            if (orderIsEmpty) {
+                cout << "\n________________________";
+                cout << "\nВаша корзина пуста!";
+            }
+            cout << endl;
         } else if (type == "Help") {
             HelpSelectItems(remainingItems);
         } else if (type == "Quit") {
+            cout << "\nВвод товаров завершен." << endl;
             break;
         } else {
-            cout << "Неизвестная команда\n\n";
+            cout << "\nНеизвестная команда\n";
             HelpSelectItems(remainingItems);
         }
     }
@@ -240,6 +263,10 @@ void PrintBoxes(const vector<TFilledBox>& filledBoxes) {
             cout << item.GetItemID() << ' ';
         }
         cout << endl;
+    }
+    if (filledBoxes.size() == 0) {
+        cout << "\n____________________";
+        cout << "\nВаш заказ пуст!";
     }
     cout << "\n\nСпасибо за использование нашего интернет-магазина. Хорошего дня :)" << endl;
 }
