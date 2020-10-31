@@ -1,4 +1,5 @@
 #include "shop.h"
+#include <iostream>
 
 TShop::TShop(const std::vector<std::pair<TItem, uint32_t>> items, const TBoxContainer boxes) {
     for (const auto& [item, amount] : items) {
@@ -62,7 +63,7 @@ std::vector<TFilledBox> TShop::Buy() {
         const uint64_t boxMask = lastBox[currentMask].first;
         std::vector<TItem> currentBoxItems;
         for (size_t bit = 0; bit < items.size(); bit++) {
-            if ((currentMask >> bit) & 1) {
+            if ((boxMask >> bit) & 1) {
                 currentBoxItems.emplace_back(items[bit]);
             }
         }
