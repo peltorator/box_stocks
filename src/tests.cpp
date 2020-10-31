@@ -15,7 +15,10 @@ TEST_CASE("3 items (1, 1). Boxes (1, 1, 2) and (2, 2, 3). Second box is cheeper 
     shop.AddItem(1);
     shop.AddItem(1);
     shop.AddItem(1);
-    std::vector<TFilledBox> myFilledBoxes = {TFilledBox(TBox(2, 2, 2, 3), {TItem(1, 1, 1), TItem(1, 1, 1)}), TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)})};
+    std::vector<TFilledBox> myFilledBoxes = {
+        TFilledBox(TBox(2, 2, 2, 3), {TItem(1, 1, 1), TItem(1, 1, 1)}),
+        TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)})
+    };
 
     REQUIRE(shop.Buy() == myFilledBoxes);
 }
@@ -25,7 +28,26 @@ TEST_CASE("3 items (1, 1). Boxes (1, 1, 2) and (2, 2, 5). Second box is more exp
     shop.AddItem(1);
     shop.AddItem(1);
     shop.AddItem(1);
-    std::vector<TFilledBox> myFilledBoxes = {TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)}), TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)}), TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)})};
+    std::vector<TFilledBox> myFilledBoxes = {
+        TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)}),
+        TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)}),
+        TFilledBox(TBox(1, 1, 1, 2), {TItem(1, 1, 1)})
+    };
 
+    REQUIRE(shop.Buy() == myFilledBoxes);
+}
+
+TEST_CASE("Same boxes with different cost.", "[single-file]") {
+    TShop shop({{TItem(1, 1, 1), 5}}, {TBox(1, 2, 2, 2), TBox(2, 2, 2, 3)});
+    shop.AddItem(1);
+    shop.AddItem(1);
+    shop.AddItem(1);
+    shop.AddItem(1);
+    shop.AddItem(1);
+    std::vector<TFilledBox> myFilledBoxes = {
+        TFilledBox(TBox(1, 2, 2, 2), {TItem(1, 1, 1), TItem(1, 1, 1)}),
+        TFilledBox(TBox(1, 2, 2, 2), {TItem(1, 1, 1), TItem(1, 1, 1)}),
+        TFilledBox(TBox(1, 2, 2, 2), {TItem(1, 1, 1)})
+    };
     REQUIRE(shop.Buy() == myFilledBoxes);
 }
