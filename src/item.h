@@ -34,6 +34,13 @@ public:
     bool operator == (const TItem& other) const {
         return ItemID == other.GetItemID();
     }
+
+    friend std::ostream& operator << (std::ostream& out, TItem item);
 };
 
 uint64_t TItem::LastID = 0;
+
+std::ostream& operator << (std::ostream& out, TItem item) {
+    out << item.ItemName;
+    return out;
+}

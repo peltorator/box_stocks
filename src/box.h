@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <ostream>
 
 class TBox {
 private:
@@ -37,6 +38,13 @@ public:
     bool operator == (const TBox& other) const {
         return BoxID == other.GetBoxID();
     }
+
+    friend std::ostream& operator << (std::ostream& out, TBox box);
 };
 
 uint64_t TBox::LastID = 0;
+
+std::ostream& operator << (std::ostream& out, TBox box) {
+    out << box.BoxName;
+    return out;
+}
