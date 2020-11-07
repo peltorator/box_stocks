@@ -1,4 +1,4 @@
-#Запуск
+# Запуск
 
 Консольный интерфейс:
 `g++ -std=c++17 src/demo.cpp -o src/demo && ./src/demo`
