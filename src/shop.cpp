@@ -1,7 +1,7 @@
 #include "shop.h"
 #include <iostream>
 
-TShop::TShop(const std::vector<std::pair<TItem, uint32_t>> items, const TBoxContainer boxes) {
+TShop::TShop(const std::vector<std::pair<TItem, uint32_t>>& items, const std::vector<TBox>& boxes) {
     for (const auto& [item, amount] : items) {
         Items[item.GetItemID()] = item;
         AvailableAmounts[item.GetItemID()] = amount;
@@ -9,12 +9,16 @@ TShop::TShop(const std::vector<std::pair<TItem, uint32_t>> items, const TBoxCont
     Boxes = boxes;
 }
 
-void TShop::AddItem(const uint64_t itemID) {
-    OrderAmounts[itemID]++;
+void TShop::AddItem(const uint64_t itemID, const uint64_t amount) {
+    for (uint64_t i = 0; i < amount; i++) {
+        OrderAmounts[itemID]++;
+    }
 }
 
-void TShop::DeleteItem(const uint64_t itemID) {
-    OrderAmounts[itemID]--;
+void TShop::DeleteItem(const uint64_t itemID, const uint64_t amount) {
+    for (uint64_t i = 0; i < amount; i++) {
+        OrderAmounts[itemID]--;
+    }
 }
 
 std::vector<TFilledBox> TShop::Buy() {
@@ -29,6 +33,7 @@ std::vector<TFilledBox> TShop::Buy() {
     std::vector<uint64_t> totalVolume(DP_SIZE, 0);
     std::vector<uint64_t> minCost(DP_SIZE, INF_COST);
     std::vector<std::pair<uint64_t, size_t>> lastBox(DP_SIZE);
+    minCost[0] = 0;
 
     for (uint64_t mask = 0; mask < DP_SIZE; mask++) {
         for (size_t bit = 0; bit < items.size(); bit++) {
@@ -40,7 +45,7 @@ std::vector<TFilledBox> TShop::Buy() {
         for (uint64_t subMask = mask; subMask > 0; subMask = (subMask - 1) & mask) {
             for (size_t boxIndex = 0; boxIndex < Boxes.size(); boxIndex++) {
                 const TBox& box = Boxes[boxIndex];
-                if (totalWeight[subMask] <= box.GetMaxWeight() && totalVolume[subMask] <= box.GetMaxVolume()) {
+                if (totalWeight[subMask] <= box.GetMaxWeight() && totalVolume[subMask] <= box.GetMaxVolume() && minCost[mask ^ subMask] != INF_COST) {
                     uint64_t newCost =  minCost[mask ^ subMask] + box.GetCost();
                     if (minCost[mask] > newCost) {
                         minCost[mask] = newCost;
@@ -71,4 +76,13 @@ std::vector<TFilledBox> TShop::Buy() {
         currentMask ^= boxMask;
     }
     return vectorOfBoxes;
+}
+
+bool TShop::OrderIsEmpty() const {
+    for (const auto& [itemId, amount] : OrderAmounts) {
+        if (amount > 0) {
+            return false;
+        }
+    }
+    return true;
 }

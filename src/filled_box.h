@@ -6,18 +6,16 @@
 
 class TFilledBox {
 private:
-    typedef std::vector<TItem> TItemContainer;
-
-    TBox Box;
-    TItemContainer Items;
+    const TBox Box;
+    const std::vector<TItem> Items;
 public:
-    TFilledBox(const TBox& box, const TItemContainer& items) : Box(box), Items(items) {}
+    TFilledBox(const TBox& box, const std::vector<TItem>& items) : Box(box), Items(items) {}
 
-    TBox GetBox() const {
+    const TBox& GetBox() const {
         return Box;
     }
 
-    const TItemContainer& GetItems() const {
+    const std::vector<TItem>& GetItems() const {
         return Items;
     }
 

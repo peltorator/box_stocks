@@ -1,16 +1,23 @@
 #pragma once
 #include <cstdint>
+#include <string>
 
 class TItem {
 private:
+    std::string ItemName;
     uint64_t ItemID;
     uint64_t Weight;
     uint64_t Volume;
+    static uint64_t LastID;
 public:
-    TItem(const uint64_t itemID, const uint64_t weight, const uint64_t volume)
-        : ItemID(itemID), Weight(weight), Volume(volume) {}
+    TItem(const std::string& itemName, const uint64_t weight, const uint64_t volume)
+        : ItemName(itemName), ItemID(LastID++), Weight(weight), Volume(volume) {}
 
-    TItem() : ItemID(0), Weight(0), Volume(0) {}
+    TItem() : ItemName(""), ItemID(0), Weight(0), Volume(0) {}
+
+    const std::string& GetItemName() const {
+        return ItemName;
+    }
 
     uint64_t GetItemID() const {
         return ItemID;
@@ -25,6 +32,8 @@ public:
     }
 
     bool operator == (const TItem& other) const {
-        return ItemID == other.GetItemID() && Weight == other.GetWeight() && Volume == other.GetVolume();
+        return ItemID == other.GetItemID();
     }
 };
+
+uint64_t TItem::LastID = 0;
