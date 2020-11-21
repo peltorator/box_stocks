@@ -3,6 +3,9 @@
 Консольный интерфейс:
 `g++ -std=c++17 src/demo.cpp -o src/demo && ./src/demo`
 
+Графический интерфейс:
+`g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
+
 Тесты:
 `g++ -std=c++17 src/tests.cpp -o src/tests && ./src/tests`
 
