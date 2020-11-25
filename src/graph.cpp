@@ -355,13 +355,6 @@ vector<TBox> GetBoxes(sf::RenderWindow& window) {
     return ans;
 }
 
-const string SETTINGS_PATH = "settings.txt";
-
-string GetImage(string filename) {
-    return filename;//"image...";
-}
-
-
 void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
         string findQuery = "select amount from Item where itemName = " + item.GetItemName() + ";";
@@ -374,7 +367,7 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
         string deleteQuery = "delete from Item where itemName = '" + item.GetItemName() + "';";
         dataBase.Query(deleteQuery);
 
-        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '" + GetImage("../images/" + item.GetItemName()) + "');";
+        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '../images/" + item.GetItemName() + "');";
         dataBase.Query(itemAddQuery);
     }
 
@@ -382,7 +375,7 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
         string findQuery = "select boxName from Box where boxName = '" + box.GetBoxName() + "';";
         auto result = dataBase.Query(findQuery);
         if (result.empty()) {
-            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", '" + GetImage("../images/" + box.GetBoxName()) + "');";
+            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", ' ../images/" + box.GetBoxName() + "');";
             dataBase.Query(boxAddQuery);
         }
     }
@@ -409,41 +402,22 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
     }
 }
 
-string DecodeImage(const string &s) {
-    return s;
-    string ans;
-    for (size_t i = 0; i < s.size(); i += 8) {
-        char c = 0;
-        for (size_t j = i; j < i + 8; j++) {
-            c <<= 1;
-            c += (s[j] - '0');
-        }
-        ans.push_back(c);
-    }
-    return ans;
-}
-
-
-pair<pair<vector<pair<TItem, uint32_t>>, vector<string>>, pair<vector<TBox>, vector<string>>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
+pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
     string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
-    vector<string> itemImages;
     auto itemsRaw = dataBase.Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back({TItem(dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"])), ToInt(dict["amount"])});
-        itemImages.push_back(DecodeImage(dict["image"]));
+        items.push_back({TItem(dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), dict["image"]), ToInt(dict["amount"])});
     }
 
     string getBoxesQuery = "select * from Box;";
     vector<TBox> boxes;
-    vector<string> boxImages;
     auto boxesRaw = dataBase.Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
-        boxes.push_back(TBox(dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"])));
-        boxImages.push_back(DecodeImage(dict["image"]));
+        boxes.push_back(TBox(dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), dict["image"]));
     }
 
-    return {{items, itemImages}, {boxes, boxImages}};
+    return {items, boxes};
 }
 
 struct ItemTile {
@@ -540,11 +514,11 @@ struct ItemTile {
     }
 };
 
-void SelectItems(sf::RenderWindow& window, TShop& shop, vector<pair<TItem, uint32_t>>& items, vector<string>& images) {
+void SelectItems(sf::RenderWindow& window, TShop& shop, vector<pair<TItem, uint32_t>>& items) {
     vector<pair<TItem, uint32_t>> remainingItems = items;
     vector<ItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, images[i]));
+        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, items[i].first.GetImagePath()));
     }
     Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
 
@@ -645,7 +619,7 @@ struct FilledBoxTile {
     }
 };
 
-void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, const vector<string>& images) {
+void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
     if (filledBoxes.size() == 0) {
         Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
         bool quit = false;
@@ -676,9 +650,9 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
         vector<FilledBoxTile> filledBoxTiles;
         for (size_t i = 0; i < filledBoxes.size(); i++) {
             string curImage;
-            for (size_t j = 0; j < boxes.size(); j++) {
-                if (boxes[j].GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
-                    curImage = images[j];
+            for (const auto& box : boxes) {
+                if (box.GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
+                    curImage = box.GetImagePath();
                 }
             }
             filledBoxTiles.push_back(FilledBoxTile(50.f, 80.f * i + 150, 1300.f, 50.f, filledBoxes[i].GetBox().GetBoxName(), filledBoxes[i].GetItems(), curImage));
@@ -745,19 +719,19 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
     TDataBase dataBase("db.sqlite");
 
-    if (ChooseMode(window) == "ADMIN") {
+    if (ChooseMode(window) == ADMIN) {
         vector<pair<TItem, uint32_t>> items = GetItems(window);
         vector<TBox> boxes = GetBoxes(window);
         FillSettings(window, items, boxes, dataBase);
     } else {
         auto [items, boxes] = GetSettings(window, dataBase);
-        TShop shop(items.first, boxes.first);
-        SelectItems(window, shop, items.first, items.second);
+        TShop shop(items, boxes);
+        SelectItems(window, shop, items);
         if (shop.OrderIsEmpty()) {
             DidntBuyAnything(window);
         } else {
             vector<TFilledBox> filledBoxes = shop.Buy();
-            PrintBoxes(window, filledBoxes, boxes.first, boxes.second);
+            PrintBoxes(window, filledBoxes, boxes);
         }
     }
 
