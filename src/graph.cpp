@@ -2,7 +2,9 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <SFML/Graphics.hpp>
+//#include <SFML/Image.hpp>
 #include "database.cpp"
 
 using namespace std;
@@ -356,7 +358,7 @@ vector<TBox> GetBoxes(sf::RenderWindow& window) {
 const string SETTINGS_PATH = "settings.txt";
 
 string GetImage(string filename) {
-    return "image...";
+    return filename;//"image...";
 }
 
 
@@ -372,7 +374,7 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
         string deleteQuery = "delete from Item where itemName = '" + item.GetItemName() + "';";
         dataBase.Query(deleteQuery);
 
-        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '" + GetImage("../images/") + "');";
+        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '" + GetImage("../images/" + item.GetItemName()) + "');";
         dataBase.Query(itemAddQuery);
     }
 
@@ -380,7 +382,7 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
         string findQuery = "select boxName from Box where boxName = '" + box.GetBoxName() + "';";
         auto result = dataBase.Query(findQuery);
         if (result.empty()) {
-            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", '" + GetImage("../images/") + "');";
+            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", '" + GetImage("../images/" + box.GetBoxName()) + "');";
             dataBase.Query(boxAddQuery);
         }
     }
@@ -407,22 +409,41 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
     }
 }
 
-pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
+string DecodeImage(const string &s) {
+    return s;
+    string ans;
+    for (size_t i = 0; i < s.size(); i += 8) {
+        char c = 0;
+        for (size_t j = i; j < i + 8; j++) {
+            c <<= 1;
+            c += (s[j] - '0');
+        }
+        ans.push_back(c);
+    }
+    return ans;
+}
+
+
+pair<pair<vector<pair<TItem, uint32_t>>, vector<string>>, pair<vector<TBox>, vector<string>>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
     string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
+    vector<string> itemImages;
     auto itemsRaw = dataBase.Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
         items.push_back({TItem(dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"])), ToInt(dict["amount"])});
+        itemImages.push_back(DecodeImage(dict["image"]));
     }
 
     string getBoxesQuery = "select * from Box;";
     vector<TBox> boxes;
+    vector<string> boxImages;
     auto boxesRaw = dataBase.Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
         boxes.push_back(TBox(dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"])));
+        boxImages.push_back(DecodeImage(dict["image"]));
     }
 
-    return {items, boxes};
+    return {{items, itemImages}, {boxes, boxImages}};
 }
 
 struct ItemTile {
@@ -435,10 +456,40 @@ struct ItemTile {
     uint32_t maxcnt;
     Button minusButton;
     Button plusButton;
+    sf::Texture pictureTexture;
+
+    /*class MyStream : public sf::InputStream {
+        string Str;
+        int64_t StrSize;
+        int64_t CurPos;
+    public:
+        MyStream(const string& str) : Str(str), StrSize(static_cast<int64_t>(str.size())), CurPos(0) {}
+
+        int64_t read(char* data, int64_t size) {
+            int64_t ind = 0;
+            while (ind < size && CurPos < StrSize) {
+                data[ind++] = Str[CurPos];
+            }
+            return ind;
+        }
+
+        int64_t seek(int64_t position) {
+            CurPos = min(position, StrSize);
+            return CurPos;
+        }
+
+        int64_t tell() {
+            return CurPos;
+        }
+
+        int64_t getSize() {
+            return StrSize;
+        }
+    };*/
 
     ItemTile() = default;
 
-    ItemTile(float curx, float cury, float curdx, float curdy, string curname, uint32_t curmaxcnt) {
+    ItemTile(float curx, float cury, float curdx, float curdy, string curname, uint32_t curmaxcnt, const string img) {
         x = curx;
         y = cury;
         dx = curdx;
@@ -446,8 +497,10 @@ struct ItemTile {
         name = "Name: " + curname;
         cnt = 0;
         maxcnt = curmaxcnt;
-        minusButton = Button(x + 0.50 * dx, y + 0.1 * dy, 0.1 * dx, 0.8 * dy, "-");
-        plusButton = Button(x + 0.70 * dx, y + 0.1 * dy, 0.1 * dx, 0.8 * dy, "+");
+        minusButton = Button(x + 0.65 * dx, y + 0.1 * dy, 0.05 * dx, 0.8 * dy, "-");
+        plusButton = Button(x + 0.75 * dx, y + 0.1 * dy, 0.05 * dx, 0.8 * dy, "+");
+
+        pictureTexture.loadFromFile(img);
     }
 
     void Draw(sf::RenderWindow& window) {
@@ -472,20 +525,26 @@ struct ItemTile {
         cntText.setCharacterSize(min(1.0, dx / cntText.getLocalBounds().width * 0.9) * 18.0);
         cntText.setFillColor(sf::Color::Black);
         cntText.setPosition(x + 0.85 * dx, y + dy * 0.5 - cntText.getLocalBounds().height * 0.5);
+
+        sf::Sprite pictureSprite;
+        pictureSprite.setTexture(pictureTexture);
+        pictureSprite.setPosition(x + dx * 0.4, y + 0.05 * dy);
+        pictureSprite.scale(0.9 * dy / pictureSprite.getLocalBounds().height, 0.9 * dy / pictureSprite.getLocalBounds().height);
         
         window.draw(rectangle);
         window.draw(text);
         window.draw(cntText);
+        window.draw(pictureSprite);
         minusButton.Draw(window);
         plusButton.Draw(window);
     }
 };
 
-void SelectItems(sf::RenderWindow& window, TShop& shop, vector<pair<TItem, uint32_t>>& items) {
+void SelectItems(sf::RenderWindow& window, TShop& shop, vector<pair<TItem, uint32_t>>& items, vector<string>& images) {
     vector<pair<TItem, uint32_t>> remainingItems = items;
     vector<ItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second));
+        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, images[i]));
     }
     Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
 
@@ -540,18 +599,21 @@ struct FilledBoxTile {
     float dy;
     string boxName;
     vector<Button> itemsButtons;
+    sf::Texture pictureTexture;
 
     FilledBoxTile() = default;
 
-    FilledBoxTile(float curx, float cury, float curdx, float curdy, string curBoxName, vector<TItem> items) {
+    FilledBoxTile(float curx, float cury, float curdx, float curdy, string curBoxName, vector<TItem> items, const string& img) {
         x = curx;
         y = cury;
         dx = curdx;
         dy = curdy;
         boxName = "Box name: " + curBoxName;
         for (size_t i = 0; i < items.size(); i++) {
-            itemsButtons.push_back(Button(x + dx / 7 * i + 30.f,  y + 0.1 * dy, dx / 7, 0.8 * dy, items[i].GetItemName()));
+            itemsButtons.push_back(Button(x + dx / 7 * i + 100.f,  y + 0.1 * dy, dx / 7, 0.8 * dy, items[i].GetItemName()));
         }
+
+        pictureTexture.loadFromFile(img);
     }
 
     void Draw(sf::RenderWindow& window) {
@@ -569,7 +631,13 @@ struct FilledBoxTile {
         float cy = y - dy * 0.2 - text.getLocalBounds().height;
         text.setPosition(cx, cy);
 
+        sf::Sprite pictureSprite;
+        pictureSprite.setTexture(pictureTexture);
+        pictureSprite.setPosition(x + 10.f, y + 0.05 * dy);
+        pictureSprite.scale(0.9 * dy / pictureSprite.getLocalBounds().height, 0.9 * dy / pictureSprite.getLocalBounds().height);
+
         window.draw(rectangle);
+        window.draw(pictureSprite);
         window.draw(text);
         for (Button& button : itemsButtons) {
             button.Draw(window);
@@ -577,7 +645,7 @@ struct FilledBoxTile {
     }
 };
 
-void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes) {
+void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, const vector<string>& images) {
     if (filledBoxes.size() == 0) {
         Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
         bool quit = false;
@@ -607,7 +675,13 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes)
         bool quit = false;
         vector<FilledBoxTile> filledBoxTiles;
         for (size_t i = 0; i < filledBoxes.size(); i++) {
-            filledBoxTiles.push_back(FilledBoxTile(50.f, 80.f * i + 150, 1300.f, 50.f, filledBoxes[i].GetBox().GetBoxName(), filledBoxes[i].GetItems()));
+            string curImage;
+            for (size_t j = 0; j < boxes.size(); j++) {
+                if (boxes[j].GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
+                    curImage = images[j];
+                }
+            }
+            filledBoxTiles.push_back(FilledBoxTile(50.f, 80.f * i + 150, 1300.f, 50.f, filledBoxes[i].GetBox().GetBoxName(), filledBoxes[i].GetItems(), curImage));
         }
 
         while (window.isOpen() && !quit) {
@@ -677,13 +751,13 @@ int main() {
         FillSettings(window, items, boxes, dataBase);
     } else {
         auto [items, boxes] = GetSettings(window, dataBase);
-        TShop shop(items, boxes);
-        SelectItems(window, shop, items);
+        TShop shop(items.first, boxes.first);
+        SelectItems(window, shop, items.first, items.second);
         if (shop.OrderIsEmpty()) {
             DidntBuyAnything(window);
         } else {
             vector<TFilledBox> filledBoxes = shop.Buy();
-            PrintBoxes(window, filledBoxes);
+            PrintBoxes(window, filledBoxes, boxes.first, boxes.second);
         }
     }
 
