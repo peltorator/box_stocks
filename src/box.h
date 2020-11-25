@@ -11,9 +11,10 @@ private:
     uint64_t MaxVolume;
     uint64_t Cost;
     static uint64_t LastID;
+    std::string ImagePath;
 public:
-    TBox(const std::string& boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost)
-        : BoxName(boxName), BoxID(LastID++), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost) {}
+    TBox(const std::string& boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& imagePath = "")
+        : BoxName(boxName), BoxID(LastID++), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost), ImagePath(imagePath) {}
 
     const std::string& GetBoxName() const {
         return BoxName;
@@ -33,6 +34,10 @@ public:
 
     uint64_t GetCost() const {
         return Cost;
+    }
+
+    const std::string& GetImagePath() const {
+        return ImagePath;
     }
 
     bool operator == (const TBox& other) const {

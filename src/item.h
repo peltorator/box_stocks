@@ -9,11 +9,12 @@ private:
     uint64_t Weight;
     uint64_t Volume;
     static uint64_t LastID;
+    std::string ImagePath;
 public:
-    TItem(const std::string& itemName, const uint64_t weight, const uint64_t volume)
-        : ItemName(itemName), ItemID(LastID++), Weight(weight), Volume(volume) {}
+    TItem(const std::string& itemName, const uint64_t weight, const uint64_t volume, const std::string& imagePath = "")
+        : ItemName(itemName), ItemID(LastID++), Weight(weight), Volume(volume), ImagePath(imagePath) {}
 
-    TItem() : ItemName(""), ItemID(0), Weight(0), Volume(0) {}
+    TItem() = default;
 
     const std::string& GetItemName() const {
         return ItemName;
@@ -29,6 +30,10 @@ public:
 
     uint64_t GetVolume() const {
         return Volume;
+    }
+
+    const std::string& GetImagePath() const {
+        return ImagePath;
     }
 
     bool operator == (const TItem& other) const {
