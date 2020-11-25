@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <SFML/Graphics.hpp>
+#include "database.cpp"
 
 using namespace std;
 
@@ -169,10 +170,15 @@ string ChooseMode(sf::RenderWindow& window) {
 uint64_t ToInt(const string& s) {
     uint64_t ans = 0;
     for (const char c : s) {
-        ans = ans * 10LL + (c - '0');
+        if (c >= '0' && c <= '9') {
+            ans = ans * 10LL + (c - '0');
+        } else {
+            return 0;
+        }
     }
     return ans;
 }
+
 
 string GetItemsString(const vector<pair<TItem, uint32_t>>& items) {
     string ans = "Your items:\nName\tWeight\tVolume\tQuantity";
@@ -349,13 +355,34 @@ vector<TBox> GetBoxes(sf::RenderWindow& window) {
 
 const string SETTINGS_PATH = "settings.txt";
 
-void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes) {
-    ofstream out(SETTINGS_PATH);
+string GetImage(string filename) {
+    return "image...";
+}
+
+
+void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
-        out << "AddItem\t" << item.GetItemName() << '\t' << item.GetWeight() << '\t' << item.GetVolume() << '\t' << amount << '\n';
+        string findQuery = "select amount from Item where itemName = " + item.GetItemName() + ";";
+        auto result = dataBase.Query(findQuery);
+        uint32_t totalAmount = amount;
+        if (!result.empty()) {
+            totalAmount += ToInt(result[0]["amount"]);
+        }
+
+        string deleteQuery = "delete from Item where itemName = '" + item.GetItemName() + "';";
+        dataBase.Query(deleteQuery);
+
+        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '" + GetImage("../images/") + "');";
+        dataBase.Query(itemAddQuery);
     }
+
     for (const TBox& box : boxes) {
-        out << "AddBox\t" << box.GetBoxName() << '\t' << box.GetMaxWeight() << '\t' << box.GetMaxVolume() << '\t' << box.GetCost() << '\n';
+        string findQuery = "select boxName from Box where boxName = '" + box.GetBoxName() + "';";
+        auto result = dataBase.Query(findQuery);
+        if (result.empty()) {
+            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", '" + GetImage("../images/") + "');";
+            dataBase.Query(boxAddQuery);
+        }
     }
 
     Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
@@ -380,28 +407,21 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
     }
 }
 
-pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings(sf::RenderWindow& window) {
+pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
+    string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
-    vector<TBox> boxes;
-    ifstream in(SETTINGS_PATH);
-    while (true) {
-        string type;
-        if (!(in >> type)) {
-            break;
-        }
-        if (type == "AddItem") {
-            string itemName;
-            uint64_t weight, volume;
-            uint32_t quantity;
-            in >> itemName >> weight >> volume >> quantity;
-            items.push_back({TItem(itemName, weight, volume), quantity});
-        } else if (type == "AddBox") {
-            string boxName;
-            uint64_t maxWeight, maxVolume, cost;
-            in >> boxName >> maxWeight >> maxVolume >> cost;
-            boxes.push_back(TBox(boxName, maxWeight, maxVolume, cost));
-        }
+    auto itemsRaw = dataBase.Query(getItemsQuery);
+    for (auto& dict : itemsRaw) {
+        items.push_back({TItem(dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"])), ToInt(dict["amount"])});
     }
+
+    string getBoxesQuery = "select * from Box;";
+    vector<TBox> boxes;
+    auto boxesRaw = dataBase.Query(getBoxesQuery);
+    for (auto& dict : boxesRaw) {
+        boxes.push_back(TBox(dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"])));
+    }
+
     return {items, boxes};
 }
 
@@ -649,13 +669,14 @@ void DidntBuyAnything(sf::RenderWindow& window) {
 int main() {
     font = GetFont();
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
+    TDataBase dataBase("db.sqlite");
 
     if (ChooseMode(window) == "ADMIN") {
         vector<pair<TItem, uint32_t>> items = GetItems(window);
         vector<TBox> boxes = GetBoxes(window);
-        FillSettings(window, items, boxes);
+        FillSettings(window, items, boxes, dataBase);
     } else {
-        auto [items, boxes] = GetSettings(window);
+        auto [items, boxes] = GetSettings(window, dataBase);
         TShop shop(items, boxes);
         SelectItems(window, shop, items);
         if (shop.OrderIsEmpty()) {
@@ -666,5 +687,6 @@ int main() {
         }
     }
 
+    dataBase.Close();
     return 0;
 }
