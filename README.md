@@ -1,13 +1,16 @@
 # Запуск
 
+Графический интерфейс:
+`g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsqlite3 -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
+
+Юнит тесты магазина:
+`g++ -std=c++17 tests_shop.cpp -o tests_shop && ./tests_shop`
+
+Юнит тесты для работы с базами данных:
+`g++ -std=c++17 tests_database.cpp -o tests_database -lsqlite3 && ./tests_database`
+
 Консольный интерфейс:
 `g++ -std=c++17 src/demo.cpp -o src/demo && ./src/demo`
-
-Графический интерфейс:
-`g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
-
-Тесты:
-`g++ -std=c++17 src/tests.cpp -o src/tests && ./src/tests`
 
 # Дорожная карта:
 
