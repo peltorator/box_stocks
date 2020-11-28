@@ -14,6 +14,12 @@ const string USER = "USER";
 const string PASSWORD = "isaf27";
 sf::Font font;
 
+sf::Font GetFont() {
+    sf::Font myFont;
+    myFont.loadFromFile("arial.ttf");
+    return myFont;
+}
+
 struct Button {
     float x;
     float y;
@@ -136,39 +142,6 @@ void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50
     window.draw(text);
 }
 
-string ChooseMode(sf::RenderWindow& window) {
-    string mode = "";
-    Button adminButton(350.f, 350.f, 200.f, 100.f, "Admin");
-    Button userButton(850.f, 350.f, 200.f, 100.f, "User");
-    while (window.isOpen() && mode.empty()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-
-                if (adminButton.IsIn(px, py)) {
-                    mode = ADMIN;
-                    break;
-                }
-                if (userButton.IsIn(px, py)) {
-                    mode = USER;
-                    break;
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Choose mode:");
-        adminButton.Draw(window);
-        userButton.Draw(window);
-        window.display();
-    }
-    return mode;
-}
-
 uint64_t ToInt(const string& s) {
     uint64_t ans = 0;
     for (const char c : s) {
@@ -181,206 +154,13 @@ uint64_t ToInt(const string& s) {
     return ans;
 }
 
-
-string GetItemsString(const vector<pair<TItem, uint32_t>>& items) {
-    string ans = "Your items:\nName\tWeight\tVolume\tQuantity";
-    for (const auto& [item, cnt] : items) {
-        ans += "\n" + item.GetItemName() + "\t\t\t" + to_string(item.GetWeight()) + "\t\t\t" + to_string(item.GetVolume()) + "\t\t\t" + to_string(cnt);
-    }
-    return ans;
-}
-
-vector<pair<TItem, uint32_t>> GetItems(sf::RenderWindow& window) {
-    vector<pair<TItem, uint32_t>> ans;
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
-    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
-    TextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
-    TextField quantityField(1000.f, 550.f, 100.f, 50.f, "Quantity");
-    Button addButton(1250.f, 550.f, 100.f, 50.f, "Add");
-    string selected = "name";
-    bool quit = false;
-    
-    while (window.isOpen() && !quit) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
-                cout << "backspace" << endl;
-                if (selected == "name") {
-                    nameField.PopChar();
-                } else if (selected == "weight") {
-                    weightField.PopChar();
-                } else if (selected == "volume") {
-                    volumeField.PopChar();
-                } else if (selected == "quantity") {
-                    quantityField.PopChar();
-                }
-            } else if (event.type == sf::Event::TextEntered) {
-                if (event.text.unicode < 128) {
-                    char c = static_cast<char>(event.text.unicode);
-                    if (selected == "name") {
-                        nameField.AddChar(c);
-                    } else if (selected == "weight") {
-                        weightField.AddChar(c);
-                    } else if (selected == "volume") {
-                        volumeField.AddChar(c);
-                    } else if (selected == "quantity") {
-                        quantityField.AddChar(c);
-                    }
-                }
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-                if (finishButton.IsIn(px, py)) {
-                    quit = true;
-                    break;
-                } else if (addButton.IsIn(px, py)) {
-                     ans.push_back({TItem(nameField.label, ToInt(weightField.label), ToInt(volumeField.label)), ToInt(quantityField.label)});
-                     nameField.Clear();
-                     weightField.Clear();
-                     volumeField.Clear();
-                     quantityField.Clear();
-                } else if (nameField.IsIn(px, py)) {
-                    selected = "name";
-                } else if (weightField.IsIn(px, py)) {
-                    selected = "weight";
-                } else if (volumeField.IsIn(px, py)) {
-                    selected = "volume";
-                } else if (quantityField.IsIn(px, py)) {
-                    selected = "quantity";
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Enter items:");
-        AddTitle(window, GetItemsString(ans), 100.f, 100.f, 20);
-        finishButton.Draw(window);
-        addButton.Draw(window);
-        nameField.Draw(window);
-        weightField.Draw(window);
-        volumeField.Draw(window);
-        quantityField.Draw(window);
-        window.display();
-    }
-    return ans;
-}
-
-string GetBoxesString(const vector<TBox>& boxes) {
-    string ans = "Your boxes:\nName\tMaxWeight\tMaxVolume\tCost";
-    for (const TBox& box : boxes) {
-        ans += "\n" + box.GetBoxName() + "\t\t\t" + to_string(box.GetMaxWeight()) + "\t\t\t" + to_string(box.GetMaxVolume()) + "\t\t\t" + to_string(box.GetCost());
-    }
-    return ans;
-}
-
-vector<TBox> GetBoxes(sf::RenderWindow& window) {
-    vector<TBox> ans;
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
-    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TextField weightField(400.f, 550.f, 100.f, 50.f, "MaxWeight");
-    TextField volumeField(700.f, 550.f, 100.f, 50.f, "MaxVolume");
-    TextField costField(1000.f, 550.f, 100.f, 50.f, "Cost");
-    Button addButton(1250.f, 550.f, 100.f, 50.f, "Add");
-    string selected = "name";
-    bool quit = false;
-    
-    while (window.isOpen() && !quit) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace)) {
-                if (selected == "name") {
-                    nameField.PopChar();
-                } else if (selected == "weight") {
-                    weightField.PopChar();
-                } else if (selected == "volume") {
-                    volumeField.PopChar();
-                } else if (selected == "cost") {
-                    costField.PopChar();
-                }
-            } else if (event.type == sf::Event::TextEntered) {
-                if (event.text.unicode < 128) {
-                    char c = static_cast<char>(event.text.unicode);
-                    if (selected == "name") {
-                        nameField.AddChar(c);
-                    } else if (selected == "weight") {
-                        weightField.AddChar(c);
-                    } else if (selected == "volume") {
-                        volumeField.AddChar(c);
-                    } else if (selected == "cost") {
-                        costField.AddChar(c);
-                    }
-                }
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-                if (finishButton.IsIn(px, py)) {
-                    quit = true;
-                    break;
-                } else if (addButton.IsIn(px, py)) {
-                     ans.push_back(TBox(nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label)));
-                     nameField.Clear();
-                     weightField.Clear();
-                     volumeField.Clear();
-                     costField.Clear();
-                } else if (nameField.IsIn(px, py)) {
-                    selected = "name";
-                } else if (weightField.IsIn(px, py)) {
-                    selected = "weight";
-                } else if (volumeField.IsIn(px, py)) {
-                    selected = "volume";
-                } else if (costField.IsIn(px, py)) {
-                    selected = "cost";
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Enter Boxes:");
-        AddTitle(window, GetBoxesString(ans), 100.f, 100.f, 20);
-        finishButton.Draw(window);
-        addButton.Draw(window);
-        nameField.Draw(window);
-        weightField.Draw(window);
-        volumeField.Draw(window);
-        costField.Draw(window);
-        window.display();
-    }
-    return ans;
-}
-
-void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes, TDataBase& dataBase) {
+void SaveNewItems(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
-        string findQuery = "select amount from Item where itemName = " + item.GetItemName() + ";";
-        auto result = dataBase.Query(findQuery);
-        uint32_t totalAmount = amount;
-        if (!result.empty()) {
-            totalAmount += ToInt(result[0]["amount"]);
-        }
-
-        string deleteQuery = "delete from Item where itemName = '" + item.GetItemName() + "';";
-        dataBase.Query(deleteQuery);
-
-        string itemAddQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.GetItemName() + "', " + to_string(item.GetWeight()) + ", " + to_string(item.GetVolume()) + ", " + to_string(totalAmount) + ", '../images/" + item.GetItemName() + "');";
-        dataBase.Query(itemAddQuery);
+        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemName = '" + item.GetItemName() + "';";
+        dataBase.Query(updateQuery);
     }
 
-    for (const TBox& box : boxes) {
-        string findQuery = "select boxName from Box where boxName = '" + box.GetBoxName() + "';";
-        auto result = dataBase.Query(findQuery);
-        if (result.empty()) {
-            string boxAddQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.GetBoxName() + "', " + to_string(box.GetMaxWeight()) + ", " + to_string(box.GetMaxVolume()) + ", " + to_string(box.GetCost()) + ", ' ../images/" + box.GetBoxName() + "');";
-            dataBase.Query(boxAddQuery);
-        }
-    }
-
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
@@ -390,14 +170,14 @@ void FillSettings(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>&
             } else if (event.type == sf::Event::MouseButtonPressed) {
                 float px = event.mouseButton.x;
                 float py = event.mouseButton.y;
-                if (finishButton.IsIn(px, py)) {
-                    window.close();
+                if (goBackButton.IsIn(px, py)) {
+                    return;
                 }
             }
         }
         window.clear();
-        AddTitle(window, "Settings are saved. Have a nice day!");
-        finishButton.Draw(window);
+        AddTitle(window, "Items were successfully added.");
+        goBackButton.Draw(window);
         window.display();
     }
 }
@@ -514,58 +294,6 @@ struct ItemTile {
     }
 };
 
-void SelectItems(sf::RenderWindow& window, TShop& shop, vector<pair<TItem, uint32_t>>& items) {
-    vector<pair<TItem, uint32_t>> remainingItems = items;
-    vector<ItemTile> itemTiles;
-    for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, items[i].first.GetImagePath()));
-    }
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
-
-    bool quit = false;
-    while (window.isOpen() && !quit) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-
-                if (finishButton.IsIn(px, py)) {
-                    quit = true;
-                    break;
-                } else {
-                    for (size_t i = 0; i < items.size(); i++) {
-                        if (itemTiles[i].minusButton.IsIn(px, py)) {
-                            if (itemTiles[i].cnt > 0) {
-                                itemTiles[i].cnt--;
-                                remainingItems[i].second++;
-                                shop.DeleteItem(items[i].first.GetItemID());
-                            }
-                        } else if (itemTiles[i].plusButton.IsIn(px, py)) {
-                            if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
-                                itemTiles[i].cnt++;
-                                remainingItems[i].second--;
-                                shop.AddItem(items[i].first.GetItemID());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Select Items you want to buy:");
-        finishButton.Draw(window);
-        for (ItemTile& itemTile : itemTiles) {
-            itemTile.Draw(window);
-        }
-        window.display();
-    }
-}
-
 struct FilledBoxTile {
     float x;
     float y;
@@ -621,9 +349,8 @@ struct FilledBoxTile {
 
 void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
     if (filledBoxes.size() == 0) {
-        Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
-        bool quit = false;
-        while (window.isOpen() && !quit) {
+        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+        while (window.isOpen()) {
             sf::Event event;
             while (window.pollEvent(event))
             {
@@ -632,20 +359,19 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
                 } else if (event.type == sf::Event::MouseButtonPressed) {
                     float px = event.mouseButton.x;
                     float py = event.mouseButton.y;
-                    if (finishButton.IsIn(px, py)) {
-                        quit = true;
-                        break;
+                    if (goBackButton.IsIn(px, py)) {
+                        return;
                     }
                 }
             }
 
             window.clear();
             AddTitle(window, "Your order can't be packed because one of your items doesn't fit in any of our boxes. We are sorry.");
-            finishButton.Draw(window);
+            goBackButton.Draw(window);
             window.display();
         }
     } else {
-        Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
+        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
         bool quit = false;
         vector<FilledBoxTile> filledBoxTiles;
         for (size_t i = 0; i < filledBoxes.size(); i++) {
@@ -667,16 +393,15 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
                 } else if (event.type == sf::Event::MouseButtonPressed) {
                     float px = event.mouseButton.x;
                     float py = event.mouseButton.y;
-                    if (finishButton.IsIn(px, py)) {
-                        quit = true;
-                        break;
+                    if (goBackButton.IsIn(px, py)) {
+                        return;
                     }
                 }
             }
 
             window.clear();
             AddTitle(window, "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:");
-            finishButton.Draw(window);
+            goBackButton.Draw(window);
             for (FilledBoxTile& filledBoxTile : filledBoxTiles) {
                 filledBoxTile.Draw(window);
             }
@@ -685,14 +410,8 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
     }
 }
 
-sf::Font GetFont() {
-    sf::Font font;
-    font.loadFromFile("arial.ttf");
-    return font;
-}
-
 void DidntBuyAnything(sf::RenderWindow& window) {
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
@@ -702,14 +421,365 @@ void DidntBuyAnything(sf::RenderWindow& window) {
             } else if (event.type == sf::Event::MouseButtonPressed) {
                 float px = event.mouseButton.x;
                 float py = event.mouseButton.y;
-                if (finishButton.IsIn(px, py)) {
-                    window.close();
+                if (goBackButton.IsIn(px, py)) {
+                    return;
                 }
             }
         }
         window.clear();
         AddTitle(window, "You didn't buy anything. We hope you'll like something next time!");
+        goBackButton.Draw(window);
+        window.display();
+    }
+}
+
+void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
+    auto [items, boxes] = GetSettings(window, dataBase);
+    TShop shop(items, boxes);
+
+    vector<pair<TItem, uint32_t>> remainingItems = items;
+    vector<ItemTile> itemTiles;
+    for (size_t i = 0; i < items.size(); i++) {
+        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, items[i].first.GetImagePath()));
+    }
+    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+
+    bool quit = false;
+    while (window.isOpen() && !quit) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (goBackButton.IsIn(px, py)) {
+                    return;
+                } else if (finishButton.IsIn(px, py)) {
+                    quit = true;
+                    break;
+                } else {
+                    for (size_t i = 0; i < items.size(); i++) {
+                        if (itemTiles[i].minusButton.IsIn(px, py)) {
+                            if (itemTiles[i].cnt > 0) {
+                                itemTiles[i].cnt--;
+                                remainingItems[i].second++;
+                                shop.DeleteItem(items[i].first.GetItemID());
+                            }
+                        } else if (itemTiles[i].plusButton.IsIn(px, py)) {
+                            if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
+                                itemTiles[i].cnt++;
+                                remainingItems[i].second--;
+                                shop.AddItem(items[i].first.GetItemID());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Select Items you want to buy:");
         finishButton.Draw(window);
+        goBackButton.Draw(window);
+        for (ItemTile& itemTile : itemTiles) {
+            itemTile.Draw(window);
+        }
+        window.display();
+    }
+
+    
+    if (shop.OrderIsEmpty()) {
+        DidntBuyAnything(window);
+    } else {
+        vector<TFilledBox> filledBoxes = shop.Buy();
+        PrintBoxes(window, filledBoxes, boxes);
+    }
+}
+
+
+        /*vector<pair<TItem, uint32_t>> items = GetItems(window);
+        vector<TBox> boxes = GetBoxes(window);
+        FillSettings(window, items, boxes, dataBase);*/
+
+
+void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
+    //TODO
+    //SaveNewItems(window, items, dataBase);
+}
+
+string GetItemsString(const vector<TItem>& items) {
+    string ans = "Your items:\nName\tWeight\tVolume\tImagePath";
+    for (const TItem& item : items) {
+        ans += "\n" + item.GetItemName() + "\t\t\t" + to_string(item.GetWeight()) + "\t\t\t" + to_string(item.GetVolume()) + "\t\t\t" + item.GetImagePath();
+    }
+    return ans;
+}
+
+void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
+    static TItem fakeItem("already exists!", 0, 0, "null");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
+    TextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
+    TextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
+    TextField imageField(1000.f, 550.f, 100.f, 50.f, "Image Path");
+    Button addButton(1250.f, 550.f, 100.f, 50.f, "Add");
+    string selected = "name";
+    vector<TItem> items;
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
+                if (selected == "name") {
+                    nameField.PopChar();
+                } else if (selected == "weight") {
+                    weightField.PopChar();
+                } else if (selected == "volume") {
+                    volumeField.PopChar();
+                } else if (selected == "image") {
+                    imageField.PopChar();
+                }
+            } else if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char c = static_cast<char>(event.text.unicode);
+                    if (selected == "name") {
+                        nameField.AddChar(c);
+                    } else if (selected == "weight") {
+                        weightField.AddChar(c);
+                    } else if (selected == "volume") {
+                        volumeField.AddChar(c);
+                    } else if (selected == "image") {
+                        imageField.AddChar(c);
+                    }
+                }
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+                if (goBackButton.IsIn(px, py)) {
+                    return;
+                } else if (addButton.IsIn(px, py)) {
+                    string selectQuery = "select itemName from Item where itemName = '" + nameField.label + "';";
+                    auto selectResponse = dataBase.Query(selectQuery);
+                    if (!selectResponse.empty()) {
+                        items.push_back(fakeItem);
+                    } else {
+                        TItem newItem(nameField.label, ToInt(weightField.label), ToInt(volumeField.label), imageField.label);
+                        items.push_back(newItem);
+                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.GetItemName() + "', " + to_string(newItem.GetWeight()) + ", " + to_string(newItem.GetVolume()) + ", 0, '" + newItem.GetImagePath() + "');";
+                        dataBase.Query(insertQuery);
+                    }
+                    nameField.Clear();
+                    weightField.Clear();
+                    volumeField.Clear();
+                    imageField.Clear();
+                } else if (nameField.IsIn(px, py)) {
+                    selected = "name";
+                } else if (weightField.IsIn(px, py)) {
+                    selected = "weight";
+                } else if (volumeField.IsIn(px, py)) {
+                    selected = "volume";
+                } else if (imageField.IsIn(px, py)) {
+                    selected = "image";
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Enter items:");
+        AddTitle(window, GetItemsString(items), 100.f, 100.f, 20);
+        goBackButton.Draw(window);
+        addButton.Draw(window);
+        nameField.Draw(window);
+        weightField.Draw(window);
+        volumeField.Draw(window);
+        imageField.Draw(window);
+        window.display();
+    }
+}
+
+void AdminDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
+    // TODO
+}
+
+string GetBoxesString(const vector<TBox>& boxes) {
+    string ans = "Your boxes:\nName\tMaxWeight\tMaxVolume\tCost\tImagePath";
+    for (const TBox& box : boxes) {
+        ans += "\n" + box.GetBoxName() + "\t\t\t" + to_string(box.GetMaxWeight()) + "\t\t\t" + to_string(box.GetMaxVolume()) + "\t\t\t" + to_string(box.GetCost()) + "\t\t\t" + box.GetImagePath();
+    }
+    return ans;
+}
+
+void AdminCreateBox(sf::RenderWindow& window, TDataBase& dataBase) {
+    static TBox fakeBox("already exists!", 0, 0, 0, "null");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
+    TextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
+    TextField volumeField(500.f, 550.f, 100.f, 50.f, "MaxVolume");
+    TextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
+    TextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
+    Button addButton(1100.f, 550.f, 100.f, 50.f, "Add");
+    string selected = "name";
+    vector<TBox> boxes;
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
+                if (selected == "name") {
+                    nameField.PopChar();
+                } else if (selected == "weight") {
+                    weightField.PopChar();
+                } else if (selected == "volume") {
+                    volumeField.PopChar();
+                } else if (selected == "cost") {
+                    costField.PopChar();
+                } else if (selected == "image") {
+                    imageField.PopChar();
+                }
+            } else if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char c = static_cast<char>(event.text.unicode);
+                    if (selected == "name") {
+                        nameField.AddChar(c);
+                    } else if (selected == "weight") {
+                        weightField.AddChar(c);
+                    } else if (selected == "volume") {
+                        volumeField.AddChar(c);
+                    } else if (selected == "cost") {
+                        costField.AddChar(c);
+                    } else if (selected == "image") {
+                        imageField.AddChar(c);
+                    }
+                }
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+                if (goBackButton.IsIn(px, py)) {
+                    return;
+                } else if (addButton.IsIn(px, py)) {
+                    string selectQuery = "select boxName from Box where boxName = '" + nameField.label + "';";
+                    auto selectResponse = dataBase.Query(selectQuery);
+                    if (!selectResponse.empty()) {
+                        boxes.push_back(fakeBox);
+                    } else {
+                        TBox newBox(nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label), imageField.label);
+                        boxes.push_back(newBox);
+                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.GetBoxName() + "', " + to_string(newBox.GetMaxWeight()) + ", " + to_string(newBox.GetMaxVolume()) + ", " + to_string(newBox.GetCost()) + ", '" + newBox.GetImagePath() + "');";
+                        dataBase.Query(insertQuery);
+                    }
+                    nameField.Clear();
+                    weightField.Clear();
+                    volumeField.Clear();
+                    costField.Clear();
+                    imageField.Clear();
+                } else if (nameField.IsIn(px, py)) {
+                    selected = "name";
+                } else if (weightField.IsIn(px, py)) {
+                    selected = "weight";
+                } else if (volumeField.IsIn(px, py)) {
+                    selected = "volume";
+                } else if (costField.IsIn(px, py)) {
+                    selected = "cost";
+                } else if (imageField.IsIn(px, py)) {
+                    selected = "image";
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Enter boxes:");
+        AddTitle(window, GetBoxesString(boxes), 100.f, 100.f, 20);
+        goBackButton.Draw(window);
+        addButton.Draw(window);
+        nameField.Draw(window);
+        weightField.Draw(window);
+        volumeField.Draw(window);
+        costField.Draw(window);
+        imageField.Draw(window);
+        window.display();
+    }
+
+}
+
+void AdminMode(sf::RenderWindow& window, TDataBase& dataBase) {
+    Button addItemButton(350.f, 100.f, 200.f, 100.f, "Add/Delete Items");
+    Button createItemButton(350.f, 300.f, 200.f, 100.f, "Create New Item");
+    Button addBoxButton(850.f, 100.f, 200.f, 100.f, "Delete Boxes");
+    Button createBoxButton(850.f, 300.f, 200.f, 100.f, "Create New Box");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (addItemButton.IsIn(px, py)) {
+                    AdminAddDeleteItem(window, dataBase);
+                } else if (createItemButton.IsIn(px, py)) {
+                    AdminCreateItem(window, dataBase);
+                } else if (addBoxButton.IsIn(px, py)) {
+                    AdminDeleteBox(window, dataBase);
+                } else if (createBoxButton.IsIn(px, py)) {
+                    AdminCreateBox(window, dataBase);
+                } else if (goBackButton.IsIn(px, py)) {
+                    return;
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Choose action:");
+        addItemButton.Draw(window);
+        createItemButton.Draw(window);
+        addBoxButton.Draw(window);
+        createBoxButton.Draw(window);
+        goBackButton.Draw(window);
+        window.display();
+    }
+
+}
+
+void ChooseMode(sf::RenderWindow& window, TDataBase& dataBase) {
+    Button adminButton(350.f, 350.f, 200.f, 100.f, "Admin");
+    Button userButton(850.f, 350.f, 200.f, 100.f, "User");
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Close The App");
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (adminButton.IsIn(px, py)) {
+                    AdminMode(window, dataBase);
+                }
+                else if (userButton.IsIn(px, py)) {
+                    UserMode(window, dataBase);
+                } else if (goBackButton.IsIn(px, py)) {
+                    return;
+                }
+            }
+        }
+        window.clear();
+        AddTitle(window, "Choose mode:");
+        adminButton.Draw(window);
+        userButton.Draw(window);
+        goBackButton.Draw(window);
         window.display();
     }
 }
@@ -719,22 +789,9 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
     TDataBase dataBase("db.sqlite");
 
-    if (ChooseMode(window) == ADMIN) {
-        vector<pair<TItem, uint32_t>> items = GetItems(window);
-        vector<TBox> boxes = GetBoxes(window);
-        FillSettings(window, items, boxes, dataBase);
-    } else {
-        auto [items, boxes] = GetSettings(window, dataBase);
-        TShop shop(items, boxes);
-        SelectItems(window, shop, items);
-        if (shop.OrderIsEmpty()) {
-            DidntBuyAnything(window);
-        } else {
-            vector<TFilledBox> filledBoxes = shop.Buy();
-            PrintBoxes(window, filledBoxes, boxes);
-        }
-    }
-
+    ChooseMode(window, dataBase);
+ 
+    window.close();
     dataBase.Close();
     return 0;
 }
