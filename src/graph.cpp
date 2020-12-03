@@ -1,17 +1,14 @@
 #include "shop.cpp"
 #include <string>
+#include <string_view>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <SFML/Graphics.hpp>
-//#include <SFML/Image.hpp>
 #include "database.cpp"
 
 using namespace std;
 
-const string ADMIN = "ADMIN";
-const string USER = "USER";
-const string PASSWORD = "isaf27";
 sf::Font font;
 
 sf::Font GetFont() {
@@ -154,47 +151,46 @@ uint64_t ToInt(const string& s) {
     return ans;
 }
 
-void SaveNewItems(sf::RenderWindow& window, const vector<pair<TItem, uint32_t>>& items, const vector<TBox>& boxes, TDataBase& dataBase) {
+void SaveNewItems(sf::RenderWindow& window, const vector<pair<TItem, int32_t>>& items, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
-        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemName = '" + item.GetItemName() + "';";
+        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemID = " + to_string(item.GetItemID()) + ";";
         dataBase.Query(updateQuery);
-    }
-
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-                if (goBackButton.IsIn(px, py)) {
-                    return;
-                }
-            }
-        }
-        window.clear();
-        AddTitle(window, "Items were successfully added.");
-        goBackButton.Draw(window);
-        window.display();
     }
 }
 
-pair<vector<pair<TItem, uint32_t>>, vector<TBox>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
+void SaveNewBoxes(sf::RenderWindow& window, const vector<pair<TBox, int32_t>>& boxes, TDataBase& dataBase) {
+    for (const auto& [box, amount] : boxes) {
+        string updateQuery = "update Box set available = available + " + to_string(amount) + " where boxID = " + to_string(box.GetBoxID()) + ";";
+        dataBase.Query(updateQuery);
+    }
+}
+
+string GetImageFromDB(const string &s) {
+    string bytes;
+    bytes.reserve(s.size() >> 3);
+    for (size_t i = 0; i < s.size(); i += 8) {
+        char c = 0;
+        for (int j = i; j < i + 8; j++) {
+            c = (c << 1) | (s[j] - '0');
+        }
+        bytes.push_back(c);
+    }
+    return bytes;
+}
+
+pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
     string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
     auto itemsRaw = dataBase.Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back({TItem(dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), dict["image"]), ToInt(dict["amount"])});
+        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
     }
 
     string getBoxesQuery = "select * from Box;";
-    vector<TBox> boxes;
+    vector<pair<TBox, uint32_t>> boxes;
     auto boxesRaw = dataBase.Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
-        boxes.push_back(TBox(dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), dict["image"]));
+        boxes.push_back({TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["available"])});
     }
 
     return {items, boxes};
@@ -205,56 +201,43 @@ struct ItemTile {
     float y;
     float dx;
     float dy;
+    uint64_t ItemID;
     string name;
     uint32_t cnt;
     uint32_t maxcnt;
+    bool ShowCnt;
     Button minusButton;
     Button plusButton;
     sf::Texture pictureTexture;
-
-    /*class MyStream : public sf::InputStream {
-        string Str;
-        int64_t StrSize;
-        int64_t CurPos;
-    public:
-        MyStream(const string& str) : Str(str), StrSize(static_cast<int64_t>(str.size())), CurPos(0) {}
-
-        int64_t read(char* data, int64_t size) {
-            int64_t ind = 0;
-            while (ind < size && CurPos < StrSize) {
-                data[ind++] = Str[CurPos];
-            }
-            return ind;
-        }
-
-        int64_t seek(int64_t position) {
-            CurPos = min(position, StrSize);
-            return CurPos;
-        }
-
-        int64_t tell() {
-            return CurPos;
-        }
-
-        int64_t getSize() {
-            return StrSize;
-        }
-    };*/
+    bool IsPresent;
 
     ItemTile() = default;
 
-    ItemTile(float curx, float cury, float curdx, float curdy, string curname, uint32_t curmaxcnt, const string img) {
-        x = curx;
-        y = cury;
+    ItemTile(float curdx, float curdy, uint64_t itemID, string curname, uint32_t curmaxcnt, const string img, bool showCnt) {
+        x = 0;
+        y = 0;
         dx = curdx;
         dy = curdy;
-        name = "Name: " + curname;
+        ItemID = itemID;
+        name = curname;
         cnt = 0;
         maxcnt = curmaxcnt;
-        minusButton = Button(x + 0.65 * dx, y + 0.1 * dy, 0.05 * dx, 0.8 * dy, "-");
-        plusButton = Button(x + 0.75 * dx, y + 0.1 * dy, 0.05 * dx, 0.8 * dy, "+");
+        ShowCnt = showCnt;
+        minusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "-");
+        plusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "+");
 
-        pictureTexture.loadFromFile(img);
+        pictureTexture.loadFromMemory(img.c_str(), img.size());
+
+        IsPresent = false;
+    }
+
+    void SetPosition(float curx, float cury) {
+        x = curx;
+        y = cury;
+        minusButton.x = x + 0.1 * dx;
+        minusButton.y = y + 0.7 * dy;
+        plusButton.x = x + 0.65 * dx;
+        plusButton.y = y + 0.7 * dy;
     }
 
     void Draw(sf::RenderWindow& window) {
@@ -268,22 +251,23 @@ struct ItemTile {
         text.setCharacterSize(18);
         text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
         text.setFillColor(sf::Color::Black);
-        float cx = x + dx * 0.1;
-        float cy = y + dy * 0.5 - text.getLocalBounds().height * 0.5;
-        text.setPosition(cx, cy);
+        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
 
         sf::Text cntText;
         cntText.setFont(font);
-        cntText.setString(to_string(cnt) + " / " + to_string(maxcnt));
+        cntText.setString((ShowCnt ? to_string(cnt) + " / " : "") + to_string(maxcnt));
         cntText.setCharacterSize(18);
-        cntText.setCharacterSize(min(1.0, dx / cntText.getLocalBounds().width * 0.9) * 18.0);
+        cntText.setCharacterSize(min(1.0, 0.25 * dx / cntText.getLocalBounds().width) * 18.0);
         cntText.setFillColor(sf::Color::Black);
-        cntText.setPosition(x + 0.85 * dx, y + dy * 0.5 - cntText.getLocalBounds().height * 0.5);
+        cntText.setPosition(x + 0.5 * dx - 0.5 * cntText.getLocalBounds().width, y + 0.8 * dy - 0.5 * cntText.getLocalBounds().height);
 
         sf::Sprite pictureSprite;
         pictureSprite.setTexture(pictureTexture);
-        pictureSprite.setPosition(x + dx * 0.4, y + 0.05 * dy);
-        pictureSprite.scale(0.9 * dy / pictureSprite.getLocalBounds().height, 0.9 * dy / pictureSprite.getLocalBounds().height);
+        float pictureHeight = pictureSprite.getLocalBounds().height;
+        float pictureWidth = pictureSprite.getLocalBounds().width;
+        float scale = min(0.5f * dy / pictureHeight, dx / pictureWidth);
+        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
+        pictureSprite.scale(scale, scale);
         
         window.draw(rectangle);
         window.draw(text);
@@ -294,28 +278,41 @@ struct ItemTile {
     }
 };
 
-struct FilledBoxTile {
+struct BoxTile {
     float x;
     float y;
     float dx;
     float dy;
-    string boxName;
-    vector<Button> itemsButtons;
+    uint64_t BoxID;
+    string name;
+    bool available;
+    Button availableButton;
     sf::Texture pictureTexture;
+    bool IsPresent;
 
-    FilledBoxTile() = default;
+    BoxTile() = default;
 
-    FilledBoxTile(float curx, float cury, float curdx, float curdy, string curBoxName, vector<TItem> items, const string& img) {
-        x = curx;
-        y = cury;
+    BoxTile(float curdx, float curdy, uint64_t boxID, string curname, bool curavailable, const string img) {
+        x = 0;
+        y = 0;
         dx = curdx;
         dy = curdy;
-        boxName = "Box name: " + curBoxName;
-        for (size_t i = 0; i < items.size(); i++) {
-            itemsButtons.push_back(Button(x + dx / 7 * i + 100.f,  y + 0.1 * dy, dx / 7, 0.8 * dy, items[i].GetItemName()));
-        }
+        BoxID = boxID;
+        name = curname;
+        available = curavailable;
+        availableButton = Button(0, 0, 0.8 * dx, 0.2 * dy, "");
 
-        pictureTexture.loadFromFile(img);
+        pictureTexture.loadFromMemory(img.c_str(), img.size());
+
+        IsPresent = false;
+    }
+
+    void SetPosition(float curx, float cury) {
+        x = curx;
+        y = cury;
+        
+        availableButton.x = x + 0.1 * dx;
+        availableButton.y = y + 0.7 * dy;
     }
 
     void Draw(sf::RenderWindow& window) {
@@ -325,24 +322,113 @@ struct FilledBoxTile {
 
         sf::Text text;
         text.setFont(font);
-        text.setString(boxName);
+        text.setString(name);
         text.setCharacterSize(18);
         text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::White);
-        float cx = x + dx * 0.5 - text.getLocalBounds().width * 0.5;
-        float cy = y - dy * 0.2 - text.getLocalBounds().height;
-        text.setPosition(cx, cy);
+        text.setFillColor(sf::Color::Black);
+        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
 
         sf::Sprite pictureSprite;
         pictureSprite.setTexture(pictureTexture);
-        pictureSprite.setPosition(x + 10.f, y + 0.05 * dy);
-        pictureSprite.scale(0.9 * dy / pictureSprite.getLocalBounds().height, 0.9 * dy / pictureSprite.getLocalBounds().height);
+        float pictureHeight = pictureSprite.getLocalBounds().height;
+        float pictureWidth = pictureSprite.getLocalBounds().width;
+        float scale = min(0.5f * dy / pictureHeight, dx / pictureWidth);
+        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
+        pictureSprite.scale(scale, scale);
 
+        availableButton.label = (available ? "Available" : "Unavailable");
+        
         window.draw(rectangle);
-        window.draw(pictureSprite);
         window.draw(text);
-        for (Button& button : itemsButtons) {
-            button.Draw(window);
+        window.draw(pictureSprite);
+        availableButton.Draw(window);
+    }
+};
+
+struct FilledBoxTile {
+    float x;
+    float y;
+    float dx;
+    float dy;
+    string boxName;
+    sf::Texture boxTexture;
+    vector<sf::Texture> itemTextures;
+    vector<string> itemNames;
+    bool IsPresent;
+
+    FilledBoxTile() = default;
+
+    FilledBoxTile(float curdx, float curdy, string curBoxName, const string boxImg, const vector<TItem>& items) {
+        x = 0;
+        y = 0;
+        dx = curdx;
+        dy = curdy;
+        boxName = curBoxName;
+
+        boxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
+
+        itemTextures.resize(items.size());
+        itemNames.resize(items.size());
+        for (size_t i = 0; i < items.size(); i++) {
+            itemTextures[i].loadFromMemory(items[i].GetImage().c_str(), items[i].GetImage().size());
+            itemNames[i] = items[i].GetItemName();
+        }
+
+        IsPresent = false;
+    }
+
+    void SetPosition(float curx, float cury) {
+        x = curx;
+        y = cury;
+    }
+
+    void Draw(sf::RenderWindow& window) {
+        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
+        rectangle.setPosition(x, y);
+        rectangle.setFillColor(sf::Color::White);
+        window.draw(rectangle);
+
+        sf::Text boxText;
+        boxText.setFont(font);
+        boxText.setString(boxName);
+        boxText.setCharacterSize(18);
+        boxText.setCharacterSize(min(1.0, dx / boxText.getLocalBounds().width * 0.9) * 18.0);
+        boxText.setFillColor(sf::Color::Black);
+        boxText.setPosition(x + 0.5 * dx - 0.5 * boxText.getLocalBounds().width, y + 5.f);
+
+        sf::Sprite boxSprite;
+        boxSprite.setTexture(boxTexture);
+        float boxHeight = boxSprite.getLocalBounds().height;
+        float boxWidth = boxSprite.getLocalBounds().width;
+        float boxScale = min(0.4f * dy / boxHeight, dx / boxWidth);
+        boxSprite.setPosition(x + 0.5 * dx - 0.5 * boxWidth * boxScale, y + 30.f);
+        boxSprite.scale(boxScale, boxScale);
+
+        window.draw(boxText);
+        window.draw(boxSprite);
+
+        for (size_t i = 0; i < itemNames.size(); i++) {
+            const string& itemName = itemNames[i];
+            const sf::Texture& itemTexture = itemTextures[i];
+
+            sf::Text itemText;
+            itemText.setFont(font);
+            itemText.setString(itemName);
+            itemText.setCharacterSize(18);
+            itemText.setCharacterSize(min(1.0, (dx - 100.f) / itemText.getLocalBounds().width * 0.9) * 18.0);
+            itemText.setFillColor(sf::Color::Black);
+            itemText.setPosition(x + 100.f, y + 0.55 * dy + i * 90.f);
+
+            sf::Sprite itemSprite;
+            itemSprite.setTexture(itemTexture);
+            float itemHeight = itemSprite.getLocalBounds().height;
+            float itemWidth = itemSprite.getLocalBounds().width;
+            float itemScale = min(80 / itemHeight, 80 / itemWidth);
+            itemSprite.setPosition(x + 10.f, y + 0.55 * dy + i * 90.f);
+            itemSprite.scale(itemScale, itemScale);
+
+            window.draw(itemText);
+            window.draw(itemSprite);
         }
     }
 };
@@ -371,19 +457,25 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
             window.display();
         }
     } else {
-        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-        bool quit = false;
         vector<FilledBoxTile> filledBoxTiles;
         for (size_t i = 0; i < filledBoxes.size(); i++) {
             string curImage;
             for (const auto& box : boxes) {
                 if (box.GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
-                    curImage = box.GetImagePath();
+                    curImage = box.GetImage();
                 }
             }
-            filledBoxTiles.push_back(FilledBoxTile(50.f, 80.f * i + 150, 1300.f, 50.f, filledBoxes[i].GetBox().GetBoxName(), filledBoxes[i].GetItems(), curImage));
+            filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].GetBox().GetBoxName(), curImage, filledBoxes[i].GetItems()));
         }
 
+        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+        Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+        Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+
+        size_t pageIndex = 0;
+        const size_t columns = 5;
+
+        bool quit = false;
         while (window.isOpen() && !quit) {
             sf::Event event;
             while (window.pollEvent(event))
@@ -393,8 +485,17 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
                 } else if (event.type == sf::Event::MouseButtonPressed) {
                     float px = event.mouseButton.x;
                     float py = event.mouseButton.y;
+
                     if (goBackButton.IsIn(px, py)) {
                         return;
+                    } else if (leftButton.IsIn(px, py)) {
+                        if (pageIndex > 0) {
+                            pageIndex--;
+                        }
+                    } else if (rightButton.IsIn(px, py)) {
+                        if ((pageIndex + 1) * columns < filledBoxTiles.size()) {
+                            pageIndex++;
+                        }
                     }
                 }
             }
@@ -402,8 +503,26 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
             window.clear();
             AddTitle(window, "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:");
             goBackButton.Draw(window);
+            if (pageIndex != 0) {
+                leftButton.Draw(window);
+            }
+            size_t curIndex = 0;
+            for (size_t i = 0; i < filledBoxTiles.size(); i++) {
+                filledBoxTiles[i].IsPresent = false;
+                if (curIndex / columns == pageIndex) {
+                    size_t innerIndex = curIndex % columns;
+                    filledBoxTiles[i].SetPosition(50.f + innerIndex * 265.f, 110.f);
+                    filledBoxTiles[i].IsPresent = true;
+                }
+                curIndex++;
+            }
+            if ((pageIndex + 1) * columns < curIndex) {
+                rightButton.Draw(window);
+            }
             for (FilledBoxTile& filledBoxTile : filledBoxTiles) {
-                filledBoxTile.Draw(window);
+                if (filledBoxTile.IsPresent) {
+                    filledBoxTile.Draw(window);
+                }
             }
             window.display();
         }
@@ -433,17 +552,42 @@ void DidntBuyAnything(sf::RenderWindow& window) {
     }
 }
 
+bool StartsWith(const string& str, const string& pref) {
+    if (pref.size() > str.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < pref.size(); i++) {
+        if (str[i] != pref[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
     auto [items, boxes] = GetSettings(window, dataBase);
-    TShop shop(items, boxes);
+    vector<TBox> availableBoxes;
+    for (const auto& box : boxes) {
+        if (box.second) {
+            availableBoxes.push_back(box.first);
+        }
+    }
+    TShop shop(items, availableBoxes);
 
-    vector<pair<TItem, uint32_t>> remainingItems = items;
     vector<ItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(50.f, 60.f * i + 100.f, 1300.f, 50.f, items[i].first.GetItemName(), items[i].second, items[i].first.GetImagePath()));
+        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.GetItemID(), items[i].first.GetItemName(), items[i].second, items[i].first.GetImage(), true));
     }
     Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+
+    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+
+    size_t pageIndex = 0;
+    const size_t rows = 2, columns = 5;
+    const size_t pageSize = rows * columns;
 
     bool quit = false;
     while (window.isOpen() && !quit) {
@@ -452,6 +596,15 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
         {
             if (event.type == sf::Event::Closed) {
                 window.close();
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
+                searchField.PopChar();
+                pageIndex = 0;
+            } else if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char c = static_cast<char>(event.text.unicode);
+                    searchField.AddChar(c);
+                    pageIndex = 0;
+                }
             } else if (event.type == sf::Event::MouseButtonPressed) {
                 float px = event.mouseButton.x;
                 float py = event.mouseButton.y;
@@ -461,19 +614,27 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
                 } else if (finishButton.IsIn(px, py)) {
                     quit = true;
                     break;
+                } else if (leftButton.IsIn(px, py)) {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                    }
+                } else if (rightButton.IsIn(px, py)) {
+                    if ((pageIndex + 1) * pageSize < itemTiles.size()) {
+                        pageIndex++;
+                    }
                 } else {
                     for (size_t i = 0; i < items.size(); i++) {
-                        if (itemTiles[i].minusButton.IsIn(px, py)) {
-                            if (itemTiles[i].cnt > 0) {
-                                itemTiles[i].cnt--;
-                                remainingItems[i].second++;
-                                shop.DeleteItem(items[i].first.GetItemID());
-                            }
-                        } else if (itemTiles[i].plusButton.IsIn(px, py)) {
-                            if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
-                                itemTiles[i].cnt++;
-                                remainingItems[i].second--;
-                                shop.AddItem(items[i].first.GetItemID());
+                        if (itemTiles[i].IsPresent) {
+                            if (itemTiles[i].minusButton.IsIn(px, py)) {
+                                if (itemTiles[i].cnt > 0) {
+                                    itemTiles[i].cnt--;
+                                    shop.DeleteItem(items[i].first.GetItemID());
+                                }
+                            } else if (itemTiles[i].plusButton.IsIn(px, py)) {
+                                if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
+                                    itemTiles[i].cnt++;
+                                    shop.AddItem(items[i].first.GetItemID());
+                                }
                             }
                         }
                     }
@@ -484,9 +645,31 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
         window.clear();
         AddTitle(window, "Select Items you want to buy:");
         finishButton.Draw(window);
+        searchField.Draw(window);
         goBackButton.Draw(window);
+        if (pageIndex != 0) {
+            leftButton.Draw(window);
+        }
+        size_t curIndex = 0;
+        for (size_t i = 0; i < itemTiles.size(); i++) {
+            itemTiles[i].IsPresent = false;
+            if (!StartsWith(itemTiles[i].name, searchField.label)) {
+                continue;
+            }
+            if (curIndex / pageSize == pageIndex) {
+                size_t innerIndex = curIndex % pageSize;
+                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                itemTiles[i].IsPresent = true;
+            }
+            curIndex++;
+        }
+        if ((pageIndex + 1) * pageSize < curIndex) {
+            rightButton.Draw(window);
+        }
         for (ItemTile& itemTile : itemTiles) {
-            itemTile.Draw(window);
+            if (itemTile.IsPresent) {
+                itemTile.Draw(window);
+            }
         }
         window.display();
     }
@@ -496,31 +679,137 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
         DidntBuyAnything(window);
     } else {
         vector<TFilledBox> filledBoxes = shop.Buy();
-        PrintBoxes(window, filledBoxes, boxes);
+        PrintBoxes(window, filledBoxes, availableBoxes);
     }
 }
 
-
-        /*vector<pair<TItem, uint32_t>> items = GetItems(window);
-        vector<TBox> boxes = GetBoxes(window);
-        FillSettings(window, items, boxes, dataBase);*/
-
-
 void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
-    //TODO
-    //SaveNewItems(window, items, dataBase);
+    auto [items, boxes] = GetSettings(window, dataBase);
+    vector<pair<TItem, int32_t>> newItems(items.size());
+    for (size_t i = 0; i < items.size(); i++) {
+        newItems[i] = {items[i].first, 0};
+    }
+
+    vector<ItemTile> itemTiles;
+    for (size_t i = 0; i < items.size(); i++) {
+        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.GetItemID(), items[i].first.GetItemName(), items[i].second, items[i].first.GetImage(), false));
+    }
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
+    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    
+    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+
+    size_t pageIndex = 0;
+    const size_t rows = 2, columns = 5;
+    const size_t pageSize = rows * columns;
+
+    bool quit = false;
+    while (window.isOpen() && !quit) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
+                searchField.PopChar();
+                pageIndex = 0;
+            } else if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char c = static_cast<char>(event.text.unicode);
+                    searchField.AddChar(c);
+                    pageIndex = 0;
+                }
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (goBackButton.IsIn(px, py)) {
+                    quit = true;
+                    break;
+                } else if (leftButton.IsIn(px, py)) {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                    }
+                } else if (rightButton.IsIn(px, py)) {
+                    if ((pageIndex + 1) * pageSize < itemTiles.size()) {
+                        pageIndex++;
+                    }
+                } else {
+                    for (size_t i = 0; i < items.size(); i++) {
+                        if (itemTiles[i].IsPresent) {
+                            if (itemTiles[i].minusButton.IsIn(px, py)) {
+                                if (itemTiles[i].maxcnt > 0) {
+                                    itemTiles[i].maxcnt--;
+                                    newItems[i].second--;
+                                }
+                            } else if (itemTiles[i].plusButton.IsIn(px, py)) {
+                                itemTiles[i].maxcnt++;
+                                newItems[i].second++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Change items amounts:");
+        goBackButton.Draw(window);
+        searchField.Draw(window);
+        if (pageIndex != 0) {
+            leftButton.Draw(window);
+        }
+        size_t curIndex = 0;
+        for (size_t i = 0; i < itemTiles.size(); i++) {
+            itemTiles[i].IsPresent = false;
+            if (!StartsWith(itemTiles[i].name, searchField.label)) {
+                continue;
+            }
+            if (curIndex / pageSize == pageIndex) {
+                size_t innerIndex = curIndex % pageSize;
+                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                itemTiles[i].IsPresent = true;
+            }
+            curIndex++;
+        }
+        if ((pageIndex + 1) * pageSize < curIndex) {
+            rightButton.Draw(window);
+        }
+        for (ItemTile& itemTile : itemTiles) {
+            if (itemTile.IsPresent) {
+                itemTile.Draw(window);
+            }
+        }
+        window.display();
+    }
+
+    SaveNewItems(window, newItems, dataBase);
 }
 
 string GetItemsString(const vector<TItem>& items) {
-    string ans = "Your items:\nName\tWeight\tVolume\tImagePath";
+    string ans = "Your new items:\nName\tWeight\tVolume";
     for (const TItem& item : items) {
-        ans += "\n" + item.GetItemName() + "\t\t\t" + to_string(item.GetWeight()) + "\t\t\t" + to_string(item.GetVolume()) + "\t\t\t" + item.GetImagePath();
+        ans += "\n" + item.GetItemName() + "\t\t\t" + to_string(item.GetWeight()) + "\t\t\t" + to_string(item.GetVolume());
+    }
+    return ans;
+}
+
+string GetImageBytes(const string &filename) {
+    ifstream file(filename, ios::binary);
+    string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    string ans;
+    ans.reserve(bytes.size() << 3);
+    for (size_t i = 0; i < bytes.size(); i++) {
+        for (int j = 7; j >= 0; j--) {
+            ans.push_back(((bytes[i] >> j) & 1) + '0');
+        }
     }
     return ans;
 }
 
 void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
-    static TItem fakeItem("already exists!", 0, 0, "null");
+    static TItem fakeItem(0, "already exists!", 0, 0);
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
     TextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
@@ -569,9 +858,9 @@ void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
                     if (!selectResponse.empty()) {
                         items.push_back(fakeItem);
                     } else {
-                        TItem newItem(nameField.label, ToInt(weightField.label), ToInt(volumeField.label), imageField.label);
+                        TItem newItem(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label));
                         items.push_back(newItem);
-                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.GetItemName() + "', " + to_string(newItem.GetWeight()) + ", " + to_string(newItem.GetVolume()) + ", 0, '" + newItem.GetImagePath() + "');";
+                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.GetItemName() + "', " + to_string(newItem.GetWeight()) + ", " + to_string(newItem.GetVolume()) + ", 0, '" + GetImageBytes(imageField.label) + "');";
                         dataBase.Query(insertQuery);
                     }
                     nameField.Clear();
@@ -603,20 +892,120 @@ void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
     }
 }
 
-void AdminDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
-    // TODO
+void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
+    auto [items, boxes] = GetSettings(window, dataBase);
+    vector<pair<TBox, int32_t>> newBoxes(boxes.size());
+    for (size_t i = 0; i < boxes.size(); i++) {
+        newBoxes[i] = {boxes[i].first, 0};
+    }
+
+    vector<BoxTile> boxTiles;
+    for (size_t i = 0; i < boxes.size(); i++) {
+        boxTiles.push_back(BoxTile(250.f, 250.f, boxes[i].first.GetBoxID(), boxes[i].first.GetBoxName(), boxes[i].second, boxes[i].first.GetImage()));
+    }
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
+    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    
+    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+
+    size_t pageIndex = 0;
+    const size_t rows = 2, columns = 5;
+    const size_t pageSize = rows * columns;
+
+    bool quit = false;
+    while (window.isOpen() && !quit) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
+                searchField.PopChar();
+                pageIndex = 0;
+            } else if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode < 128) {
+                    char c = static_cast<char>(event.text.unicode);
+                    searchField.AddChar(c);
+                    pageIndex = 0;
+                }
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (goBackButton.IsIn(px, py)) {
+                    quit = true;
+                    break;
+                } else if (leftButton.IsIn(px, py)) {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                    }
+                } else if (rightButton.IsIn(px, py)) {
+                    if ((pageIndex + 1) * pageSize < boxTiles.size()) {
+                        pageIndex++;
+                    }
+                } else {
+                    for (size_t i = 0; i < boxes.size(); i++) {
+                        if (boxTiles[i].IsPresent) {
+                            if (boxTiles[i].availableButton.IsIn(px, py)) {
+                                if (boxTiles[i].available) {
+                                    boxTiles[i].available = false;
+                                    newBoxes[i].second--;
+                                } else {
+                                    boxTiles[i].available = true;
+                                    newBoxes[i].second++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "Change Boxes Availability:");
+        goBackButton.Draw(window);
+        searchField.Draw(window);
+        if (pageIndex != 0) {
+            leftButton.Draw(window);
+        }
+        size_t curIndex = 0;
+        for (size_t i = 0; i < boxTiles.size(); i++) {
+            boxTiles[i].IsPresent = false;
+            if (!StartsWith(boxTiles[i].name, searchField.label)) {
+                continue;
+            }
+            if (curIndex / pageSize == pageIndex) {
+                size_t innerIndex = curIndex % pageSize;
+                boxTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                boxTiles[i].IsPresent = true;
+            }
+            curIndex++;
+        }
+        if ((pageIndex + 1) * pageSize < curIndex) {
+            rightButton.Draw(window);
+        }
+        for (BoxTile& boxTile : boxTiles) {
+            if (boxTile.IsPresent) {
+                boxTile.Draw(window);
+            }
+        }
+        window.display();
+    }
+
+    SaveNewBoxes(window, newBoxes, dataBase);
 }
 
 string GetBoxesString(const vector<TBox>& boxes) {
-    string ans = "Your boxes:\nName\tMaxWeight\tMaxVolume\tCost\tImagePath";
+    string ans = "Your new boxes:\nName\tMaxWeight\tMaxVolume\tCost";
     for (const TBox& box : boxes) {
-        ans += "\n" + box.GetBoxName() + "\t\t\t" + to_string(box.GetMaxWeight()) + "\t\t\t" + to_string(box.GetMaxVolume()) + "\t\t\t" + to_string(box.GetCost()) + "\t\t\t" + box.GetImagePath();
+        ans += "\n" + box.GetBoxName() + "\t\t\t" + to_string(box.GetMaxWeight()) + "\t\t\t" + to_string(box.GetMaxVolume()) + "\t\t\t" + to_string(box.GetCost());
     }
     return ans;
 }
 
 void AdminCreateBox(sf::RenderWindow& window, TDataBase& dataBase) {
-    static TBox fakeBox("already exists!", 0, 0, 0, "null");
+    static TBox fakeBox(0, "already exists!", 0, 0, 0);
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
     TextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
@@ -670,9 +1059,9 @@ void AdminCreateBox(sf::RenderWindow& window, TDataBase& dataBase) {
                     if (!selectResponse.empty()) {
                         boxes.push_back(fakeBox);
                     } else {
-                        TBox newBox(nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label), imageField.label);
+                        TBox newBox(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label));
                         boxes.push_back(newBox);
-                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.GetBoxName() + "', " + to_string(newBox.GetMaxWeight()) + ", " + to_string(newBox.GetMaxVolume()) + ", " + to_string(newBox.GetCost()) + ", '" + newBox.GetImagePath() + "');";
+                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.GetBoxName() + "', " + to_string(newBox.GetMaxWeight()) + ", " + to_string(newBox.GetMaxVolume()) + ", " + to_string(newBox.GetCost()) + ", 1, '" + GetImageBytes(imageField.label) + "');";
                         dataBase.Query(insertQuery);
                     }
                     nameField.Clear();
@@ -712,7 +1101,7 @@ void AdminCreateBox(sf::RenderWindow& window, TDataBase& dataBase) {
 void AdminMode(sf::RenderWindow& window, TDataBase& dataBase) {
     Button addItemButton(350.f, 100.f, 200.f, 100.f, "Add/Delete Items");
     Button createItemButton(350.f, 300.f, 200.f, 100.f, "Create New Item");
-    Button addBoxButton(850.f, 100.f, 200.f, 100.f, "Delete Boxes");
+    Button addBoxButton(850.f, 100.f, 200.f, 100.f, "Add/Delete Boxes");
     Button createBoxButton(850.f, 300.f, 200.f, 100.f, "Create New Box");
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
 
@@ -730,7 +1119,7 @@ void AdminMode(sf::RenderWindow& window, TDataBase& dataBase) {
                 } else if (createItemButton.IsIn(px, py)) {
                     AdminCreateItem(window, dataBase);
                 } else if (addBoxButton.IsIn(px, py)) {
-                    AdminDeleteBox(window, dataBase);
+                    AdminAddDeleteBox(window, dataBase);
                 } else if (createBoxButton.IsIn(px, py)) {
                     AdminCreateBox(window, dataBase);
                 } else if (goBackButton.IsIn(px, py)) {

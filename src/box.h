@@ -5,23 +5,24 @@
 
 class TBox {
 private:
-    std::string BoxName;
     uint64_t BoxID;
+    std::string BoxName;
     uint64_t MaxWeight;
     uint64_t MaxVolume;
     uint64_t Cost;
-    static uint64_t LastID;
-    std::string ImagePath;
+    std::string Image;
 public:
-    TBox(const std::string& boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& imagePath = "")
-        : BoxName(boxName), BoxID(LastID++), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost), ImagePath(imagePath) {}
+    TBox(const uint64_t& boxID, const std::string& boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& image = "")
+        : BoxID(boxID), BoxName(boxName), MaxWeight(maxWeight), MaxVolume(maxVolume), Cost(cost), Image(image) {}
 
-    const std::string& GetBoxName() const {
-        return BoxName;
-    }
+    TBox() = default;
 
     uint64_t GetBoxID() const {
         return BoxID;
+    }
+
+    const std::string& GetBoxName() const {
+        return BoxName;
     }
 
     uint64_t GetMaxWeight() const {
@@ -36,8 +37,8 @@ public:
         return Cost;
     }
 
-    const std::string& GetImagePath() const {
-        return ImagePath;
+    const std::string& GetImage() const {
+        return Image;
     }
 
     bool operator == (const TBox& other) const {
@@ -46,8 +47,6 @@ public:
 
     friend std::ostream& operator << (std::ostream& out, TBox box);
 };
-
-uint64_t TBox::LastID = 0;
 
 std::ostream& operator << (std::ostream& out, TBox box) {
     out << box.BoxName;

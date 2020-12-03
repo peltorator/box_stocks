@@ -8,7 +8,6 @@
 using namespace std;
 
 string GetImage(string filename) {
-    return filename;
     ifstream file(filename, ios::binary);
     string s((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     string ans = "";
@@ -24,14 +23,14 @@ void CreateTables(TDataBase dataBase) {
     string queryDropAndCreateTables = "drop table if exists Item;\n"
         "create table if not exists Item (itemID integer primary key, itemName text, weight integer, volume integer, amount integer, image text);"
         "drop table if exists Box;"
-        "create table if not exists Box (boxID integer primary key, boxName text, maxWeight integer, maxVolume integer, cost integer, image text);";
+        "create table if not exists Box (boxID integer primary key, boxName text, maxWeight integer, maxVolume integer, cost integer, available integer, image text);";
     
     dataBase.Query(queryDropAndCreateTables);
 }
 
 void AddElems(TDataBase dataBase) {
     string queryInsertItems = "insert into Item(itemName, weight, volume, amount, image) values";
-    string queryInsertBoxes = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values";
+    string queryInsertBoxes = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values";
 
     ifstream in("setup.txt");
     uint32_t curItemID = 0;
@@ -55,7 +54,7 @@ void AddElems(TDataBase dataBase) {
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" /*+ to_string(curBoxID++) + ", '" */+ boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", '" + GetImage("../images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" /*+ to_string(curBoxID++) + ", '" */+ boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImage("../images/" + imagePath) + "'),";
         }
     }
 
