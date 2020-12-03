@@ -10,6 +10,7 @@ struct Button {
     float dx;
     float dy;
     std::string label;
+    bool IsPresent;
 
     Button() = default;
 
@@ -18,7 +19,13 @@ struct Button {
         , y(y)
         , dx(dx)
         , dy(dy)
-        , label(label) {}
+        , label(label)
+        , IsPresent(true) {}
+
+    void SetPosition(float curx, float cury) {
+        x = curx;
+        y = cury;
+    }
 
     void Draw(sf::RenderWindow& window) {
         sf::RectangleShape rectangle(sf::Vector2f(dx, dy));

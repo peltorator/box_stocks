@@ -5,12 +5,12 @@
 #include <vector>
 #include <ostream>
 
-class TFilledBox {
-private:
-    const TBox Box;
-    const std::vector<TItem> Items;
-public:
-    TFilledBox(const TBox& box, const std::vector<TItem>& items) : Box(box), Items(items) {}
+struct TFilledBox {
+    TBox Box;
+    std::vector<TItem> Items;
+    TFilledBox(const TBox& box, const std::vector<TItem>& items = {}) : Box(box), Items(items) {}
+
+    TFilledBox() = default;
 
     const TBox& GetBox() const {
         return Box;

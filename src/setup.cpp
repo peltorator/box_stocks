@@ -21,9 +21,17 @@ string GetImage(string filename) {
 
 void CreateTables(TDataBase dataBase) {
     string queryDropAndCreateTables = "drop table if exists Item;\n"
-        "create table if not exists Item (itemID integer primary key, itemName text, weight integer, volume integer, amount integer, image text);"
-        "drop table if exists Box;"
-        "create table if not exists Box (boxID integer primary key, boxName text, maxWeight integer, maxVolume integer, cost integer, available integer, image text);";
+        "create table Item (itemID integer primary key, itemName text, weight integer, volume integer, amount integer, image text);\n"
+        "drop table if exists Box;\n"
+        "create table Box (boxID integer primary key, boxName text, maxWeight integer, maxVolume integer, cost integer, available integer, image text);\n"
+        "drop table if exists Users;\n"
+        "create table Users (userID integer primary key, userName text);\n"
+        "drop table if exists Orders;\n"
+        "create table Orders (orderID integer primary key, userID integer, orderDate text, foreign key(userID) references Users(userID));\n"
+        "drop table if exists FilledBox;\n"
+        "create table FilledBox (filledBoxID integer primary key, boxID integer, orderID integer, foreign key(boxID) references Box(boxID), foreign key(orderID) references Orders(orderID));\n"
+        "drop table if exists ItemsForFilledBox;\n"
+        "create table ItemsForFilledBox (itemsForFilledBoxID integer primary key, itemID integer, filledBoxID integer, foreign key(itemID) references Items(itemID), foreign key(filledBoxID) references Orders(filledBoxID));\n";
     
     dataBase.Query(queryDropAndCreateTables);
 }
@@ -47,14 +55,14 @@ void AddElems(TDataBase dataBase) {
             string imagePath;
             in >> itemName >> weight >> volume >> quantity >> imagePath;
             
-            queryInsertItems += " ('" /*+ to_string(curItemID++) + ", '" */+ itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImage("../images/" + imagePath) + "'),";
+            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImage("../images/" + imagePath) + "'),";
         } else if (type == "AddBox") {
             string boxName;
             uint64_t maxWeight, maxVolume, cost;
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" /*+ to_string(curBoxID++) + ", '" */+ boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImage("../images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImage("../images/" + imagePath) + "'),";
         }
     }
 
@@ -63,6 +71,9 @@ void AddElems(TDataBase dataBase) {
 
     dataBase.Query(queryInsertItems);
     dataBase.Query(queryInsertBoxes);
+
+    string queryInsertUsers = "insert into Users(userID, userName) values (1, 'peltorator');";
+    dataBase.Query(queryInsertUsers);
 }
 
 int main() {

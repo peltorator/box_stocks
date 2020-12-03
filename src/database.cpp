@@ -35,6 +35,10 @@ public:
         return values;
     }
 
+    int64_t GetLastInsertID() {
+        return sqlite3_last_insert_rowid(db);
+    }
+
     static sqlite3* db;
     static std::vector<std::map<std::string, std::string>> values;
 };

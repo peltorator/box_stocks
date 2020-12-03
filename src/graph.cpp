@@ -1,4 +1,5 @@
 #include <string>
+#include <ctime>
 #include <string_view>
 #include <iostream>
 #include <fstream>
@@ -6,6 +7,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "shop.cpp"
+#include "order.cpp"
 #include "button.cpp"
 #include "text_field.cpp"
 #include "item_tile.cpp"
@@ -22,7 +24,6 @@ void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50
     text.setString(title);
     text.setCharacterSize(charSize);
     text.setFillColor(sf::Color::White);
-    //text.setStyle(sf::Text::Bold | sf::Text::Underlined);
     text.setPosition(px, py);
     window.draw(text);
 }
@@ -39,14 +40,14 @@ uint64_t ToInt(const string& s) {
     return ans;
 }
 
-void SaveNewItems(sf::RenderWindow& window, const vector<pair<TItem, int32_t>>& items, TDataBase& dataBase) {
+void UpdateItems(sf::RenderWindow& window, const vector<pair<TItem, int32_t>>& items, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
         string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemID = " + to_string(item.GetItemID()) + ";";
         dataBase.Query(updateQuery);
     }
 }
 
-void SaveNewBoxes(sf::RenderWindow& window, const vector<pair<TBox, int32_t>>& boxes, TDataBase& dataBase) {
+void UpdateBoxes(sf::RenderWindow& window, const vector<pair<TBox, int32_t>>& boxes, TDataBase& dataBase) {
     for (const auto& [box, amount] : boxes) {
         string updateQuery = "update Box set available = available + " + to_string(amount) + " where boxID = " + to_string(box.GetBoxID()) + ";";
         dataBase.Query(updateQuery);
@@ -66,7 +67,7 @@ string GetImageFromDB(const string &s) {
     return bytes;
 }
 
-pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(sf::RenderWindow& window, TDataBase& dataBase) {
+pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(TDataBase& dataBase) {
     string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
     auto itemsRaw = dataBase.Query(getItemsQuery);
@@ -215,8 +216,34 @@ bool StartsWith(const string& str, const string& pref) {
     return true;
 }
 
+const string currentDate() {
+    time_t now = time(0);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
+    return buf;
+}
+
+void SaveOrder(const vector<TFilledBox>& filledBoxes, TDataBase& dataBase) {
+    const string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + currentDate() + "');";
+    dataBase.Query(insertOrderQuery);
+    int64_t orderID = dataBase.GetLastInsertID();
+    
+    for (const TFilledBox& filledBox : filledBoxes) {
+        const string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + to_string(filledBox.GetBox().GetBoxID()) + ", " + to_string(orderID) + ");";
+        dataBase.Query(insertFilledBoxQuery);
+        int64_t filledBoxID = dataBase.GetLastInsertID();
+
+        for (const TItem& item : filledBox.GetItems()) {
+            const string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + to_string(item.GetItemID()) + ", " + to_string(filledBoxID) + ");";
+            dataBase.Query(insertItemsForFilledBoxQuery);
+        }
+    }
+}
+
 void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(window, dataBase);
+    auto [items, boxes] = GetSettings(dataBase);
     vector<TBox> availableBoxes;
     for (const auto& box : boxes) {
         if (box.second) {
@@ -330,12 +357,20 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
         DidntBuyAnything(window);
     } else {
         vector<TFilledBox> filledBoxes = shop.Buy();
+        vector<pair<TItem, int32_t>> boughtItems;
+        for (const TFilledBox& filledBox : filledBoxes) {
+            for (const TItem& item : filledBox.GetItems()) {
+                boughtItems.emplace_back(item, -1);
+            }
+        }
+        SaveOrder(filledBoxes, dataBase);
+        UpdateItems(window, boughtItems, dataBase);
         PrintBoxes(window, filledBoxes, availableBoxes);
     }
 }
 
 void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(window, dataBase);
+    auto [items, boxes] = GetSettings(dataBase);
     vector<pair<TItem, int32_t>> newItems(items.size());
     for (size_t i = 0; i < items.size(); i++) {
         newItems[i] = {items[i].first, 0};
@@ -435,7 +470,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
         window.display();
     }
 
-    SaveNewItems(window, newItems, dataBase);
+    UpdateItems(window, newItems, dataBase);
 }
 
 string GetItemsString(const vector<TItem>& items) {
@@ -544,7 +579,7 @@ void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
 }
 
 void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(window, dataBase);
+    auto [items, boxes] = GetSettings(dataBase);
     vector<pair<TBox, int32_t>> newBoxes(boxes.size());
     for (size_t i = 0; i < boxes.size(); i++) {
         newBoxes[i] = {boxes[i].first, 0};
@@ -644,7 +679,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
         window.display();
     }
 
-    SaveNewBoxes(window, newBoxes, dataBase);
+    UpdateBoxes(window, newBoxes, dataBase);
 }
 
 string GetBoxesString(const vector<TBox>& boxes) {
@@ -788,12 +823,145 @@ void AdminMode(sf::RenderWindow& window, TDataBase& dataBase) {
         goBackButton.Draw(window);
         window.display();
     }
+}
 
+vector<TOrder> GetOrders(TDataBase& dataBase) {
+    const string selectUsersQuery = "select * from Users;";
+    auto usersVector = dataBase.Query(selectUsersQuery);
+    map<uint64_t, string> userNames;
+    for (auto& row : usersVector) {
+        userNames[ToInt(row["userID"])] = row["userName"];
+    }
+
+    const string selectOrdersQuery = "select * from Orders;";
+    auto ordersVector = dataBase.Query(selectOrdersQuery);
+    map<uint64_t, TOrder> orders;
+    for (auto& row : ordersVector) {
+        const uint64_t orderID = ToInt(row["orderID"]);
+        const uint64_t userID = ToInt(row["userID"]);
+        orders[orderID] = TOrder(orderID, userID, userNames[userID], row["orderDate"]);
+    }
+
+    const auto& [itemsVector, boxesVector] = GetSettings(dataBase);
+
+    map<uint64_t, TItem> items;
+    for (const auto& [item, amount] : itemsVector) {
+        items[item.GetItemID()] = item;
+    }
+
+    map<uint64_t, TBox> boxes;
+    for (const auto& [box, amount] : boxesVector) {
+        boxes[box.GetBoxID()] = box;
+    }
+
+    const string selectFilledBoxesQuery = "select * from FilledBox;";
+    auto FilledBoxesVector = dataBase.Query(selectFilledBoxesQuery);
+    map<uint64_t, pair<TFilledBox, uint64_t>> filledBoxes;
+    for (auto& row : FilledBoxesVector) {
+        filledBoxes[ToInt(row["filledBoxID"])] = {TFilledBox(boxes[ToInt(row["boxID"])]), ToInt(row["orderID"])};
+    }
+
+    const string selectItemsForFilledBoxQuery = "select * from ItemsForFilledBox;";
+    auto ItemsForFilledBoxVector = dataBase.Query(selectItemsForFilledBoxQuery);
+    for (auto& row : ItemsForFilledBoxVector) {
+        filledBoxes[ToInt(row["filledBoxID"])].first.Items.push_back(items[ToInt(row["itemID"])]);
+    }
+
+    for (const auto& [id, filledBox] : filledBoxes) {
+        assert(filledBox.second == 1);
+        orders[filledBox.second].FilledBoxes.push_back(filledBox.first);
+    }
+
+    vector<TOrder> ans;
+    ans.reserve(orders.size());
+    for (const auto& order : orders) {
+        ans.push_back(order.second);
+    }
+    return ans;
+}
+
+void ShowOrder(sf::RenderWindow& window, const TOrder& order) {
+    // TODO
+}
+
+void ShowHistory(sf::RenderWindow& window, TDataBase& dataBase) {
+    vector<TOrder> orders = GetOrders(dataBase);
+    vector<Button> orderButtons(orders.size());
+    for (size_t i = 0; i < orders.size(); i++) {
+        orderButtons[i] = Button(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
+    }
+
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+
+    size_t pageIndex = 0;
+    const size_t rows = 13;
+
+    bool quit = false;
+    while (window.isOpen() && !quit) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (goBackButton.IsIn(px, py)) {
+                    return;
+                } else if (leftButton.IsIn(px, py)) {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                    }
+                } else if (rightButton.IsIn(px, py)) {
+                    if ((pageIndex + 1) * rows < orderButtons.size()) {
+                        pageIndex++;
+                    }
+                } else {
+                    for (size_t i = 0; i < orders.size(); i++) {
+                        if (orderButtons[i].IsPresent && orderButtons[i].IsIn(px, py)) {
+                            ShowOrder(window, orders[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, "This Is History Of Your Orders. You Can Select Any Of Them.");
+        goBackButton.Draw(window);
+        if (pageIndex != 0) {
+            leftButton.Draw(window);
+        }
+        size_t curIndex = 0;
+        for (size_t i = 0; i < orderButtons.size(); i++) {
+            orderButtons[i].IsPresent = false;
+            if (curIndex / rows == pageIndex) {
+                size_t innerIndex = curIndex % rows;
+                orderButtons[i].SetPosition(50.f, 100.f + innerIndex * 75.f);
+                orderButtons[i].IsPresent = true;
+            }
+            curIndex++;
+        }
+        if ((pageIndex + 1) * rows < curIndex) {
+            rightButton.Draw(window);
+        }
+        for (Button& orderButton : orderButtons) {
+            if (orderButton.IsPresent) {
+                orderButton.Draw(window);
+            }
+        }
+        window.display();
+    }
 }
 
 void ChooseMode(sf::RenderWindow& window, TDataBase& dataBase) {
-    Button adminButton(350.f, 350.f, 200.f, 100.f, "Admin");
-    Button userButton(850.f, 350.f, 200.f, 100.f, "User");
+    Button adminButton(200.f, 350.f, 200.f, 100.f, "Admin");
+    Button userButton(600.f, 350.f, 200.f, 100.f, "Buy");
+    Button historyButton(1000.f, 350.f, 200.f, 100.f, "See History");
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Close The App");
 
     while (window.isOpen()) {
@@ -810,6 +978,8 @@ void ChooseMode(sf::RenderWindow& window, TDataBase& dataBase) {
                 }
                 else if (userButton.IsIn(px, py)) {
                     UserMode(window, dataBase);
+                } else if (historyButton.IsIn(px, py)) {
+                    ShowHistory(window, dataBase);
                 } else if (goBackButton.IsIn(px, py)) {
                     return;
                 }
@@ -819,6 +989,7 @@ void ChooseMode(sf::RenderWindow& window, TDataBase& dataBase) {
         AddTitle(window, "Choose mode:");
         adminButton.Draw(window);
         userButton.Draw(window);
+        historyButton.Draw(window);
         goBackButton.Draw(window);
         window.display();
     }
