@@ -1,136 +1,24 @@
-#include "shop.cpp"
 #include <string>
 #include <string_view>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <SFML/Graphics.hpp>
+
+#include "shop.cpp"
+#include "button.cpp"
+#include "text_field.cpp"
+#include "item_tile.cpp"
+#include "box_tile.cpp"
+#include "filled_box_tile.cpp"
 #include "database.cpp"
+#include "font.cpp"
 
 using namespace std;
 
-sf::Font font;
-
-sf::Font GetFont() {
-    sf::Font myFont;
-    myFont.loadFromFile("arial.ttf");
-    return myFont;
-}
-
-struct Button {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    string label;
-
-    Button() = default;
-
-    Button(float x, float y, float dx, float dy, string label)
-        : x(x)
-        , y(y)
-        , dx(dx)
-        , dy(dy)
-        , label(label) {}
-
-    void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
-        rectangle.setFillColor(sf::Color::White);
-
-        sf::Text text;
-        text.setFont(font);
-        text.setString(label);
-        text.setCharacterSize(18);
-        text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        float cx = x + dx * 0.5 - text.getLocalBounds().width * 0.5;
-        float cy = y + dy * 0.5 - text.getLocalBounds().height * 0.5;
-        text.setPosition(cx, cy);
-        
-        window.draw(rectangle);
-        window.draw(text);
-    }
-
-    bool IsIn(float px, float py) {
-        return x <= px && px <= x + dx && y <= py && py <= y + dy;
-    }
-};
-
-struct TextField {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    string name;
-    string label;
-    bool needPop;
-
-    TextField() = default;
-
-    TextField(float x, float y, float dx, float dy, string name)
-        : x(x)
-        , y(y)
-        , dx(dx)
-        , dy(dy)
-        , name(name)
-        , label("")
-        , needPop(false) {}
-
-    void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
-        rectangle.setFillColor(sf::Color::White);
-
-        sf::Text text;
-        text.setFont(font);
-        text.setString(label);
-        text.setCharacterSize(18);
-        text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        float cx = x + dx * 0.1;
-        float cy = y + dy * 0.5 - text.getLocalBounds().height * 0.5;
-        text.setPosition(cx, cy);
-
-        sf::Text nameText;
-        nameText.setFont(font);
-        nameText.setString(name);
-        nameText.setCharacterSize(18);
-        nameText.setCharacterSize(min(1.0, dx / nameText.getLocalBounds().width * 0.9) * 18.0);
-        nameText.setFillColor(sf::Color::White);
-        float cx2 = x + dx * 0.5 - nameText.getLocalBounds().width * 0.5;
-        float cy2 = y - dy * 0.2 - nameText.getLocalBounds().height;
-        nameText.setPosition(cx2, cy2);
-        
-        window.draw(rectangle);
-        window.draw(text);
-        window.draw(nameText);
-    }
-
-    bool IsIn(float px, float py) {
-        return x <= px && px <= x + dx && y <= py && py <= y + dy;
-    }
-
-    void AddChar(const char& c) {
-        label.push_back(c);
-    }
-
-    void PopChar() {
-        if (!label.empty() && needPop) {
-            label.pop_back();
-        }
-        needPop = !needPop;
-    }
-
-    void Clear() {
-        label.clear();
-    }
-};
-
-
 void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
     sf::Text text;
-    text.setFont(font);
+    text.setFont(NFont::font);
     text.setString(title);
     text.setCharacterSize(charSize);
     text.setFillColor(sf::Color::White);
@@ -195,243 +83,6 @@ pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(sf
 
     return {items, boxes};
 }
-
-struct ItemTile {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    uint64_t ItemID;
-    string name;
-    uint32_t cnt;
-    uint32_t maxcnt;
-    bool ShowCnt;
-    Button minusButton;
-    Button plusButton;
-    sf::Texture pictureTexture;
-    bool IsPresent;
-
-    ItemTile() = default;
-
-    ItemTile(float curdx, float curdy, uint64_t itemID, string curname, uint32_t curmaxcnt, const string img, bool showCnt) {
-        x = 0;
-        y = 0;
-        dx = curdx;
-        dy = curdy;
-        ItemID = itemID;
-        name = curname;
-        cnt = 0;
-        maxcnt = curmaxcnt;
-        ShowCnt = showCnt;
-        minusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "-");
-        plusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "+");
-
-        pictureTexture.loadFromMemory(img.c_str(), img.size());
-
-        IsPresent = false;
-    }
-
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
-        minusButton.x = x + 0.1 * dx;
-        minusButton.y = y + 0.7 * dy;
-        plusButton.x = x + 0.65 * dx;
-        plusButton.y = y + 0.7 * dy;
-    }
-
-    void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
-        rectangle.setFillColor(sf::Color::White);
-
-        sf::Text text;
-        text.setFont(font);
-        text.setString(name);
-        text.setCharacterSize(18);
-        text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
-
-        sf::Text cntText;
-        cntText.setFont(font);
-        cntText.setString((ShowCnt ? to_string(cnt) + " / " : "") + to_string(maxcnt));
-        cntText.setCharacterSize(18);
-        cntText.setCharacterSize(min(1.0, 0.25 * dx / cntText.getLocalBounds().width) * 18.0);
-        cntText.setFillColor(sf::Color::Black);
-        cntText.setPosition(x + 0.5 * dx - 0.5 * cntText.getLocalBounds().width, y + 0.8 * dy - 0.5 * cntText.getLocalBounds().height);
-
-        sf::Sprite pictureSprite;
-        pictureSprite.setTexture(pictureTexture);
-        float pictureHeight = pictureSprite.getLocalBounds().height;
-        float pictureWidth = pictureSprite.getLocalBounds().width;
-        float scale = min(0.5f * dy / pictureHeight, dx / pictureWidth);
-        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
-        pictureSprite.scale(scale, scale);
-        
-        window.draw(rectangle);
-        window.draw(text);
-        window.draw(cntText);
-        window.draw(pictureSprite);
-        minusButton.Draw(window);
-        plusButton.Draw(window);
-    }
-};
-
-struct BoxTile {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    uint64_t BoxID;
-    string name;
-    bool available;
-    Button availableButton;
-    sf::Texture pictureTexture;
-    bool IsPresent;
-
-    BoxTile() = default;
-
-    BoxTile(float curdx, float curdy, uint64_t boxID, string curname, bool curavailable, const string img) {
-        x = 0;
-        y = 0;
-        dx = curdx;
-        dy = curdy;
-        BoxID = boxID;
-        name = curname;
-        available = curavailable;
-        availableButton = Button(0, 0, 0.8 * dx, 0.2 * dy, "");
-
-        pictureTexture.loadFromMemory(img.c_str(), img.size());
-
-        IsPresent = false;
-    }
-
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
-        
-        availableButton.x = x + 0.1 * dx;
-        availableButton.y = y + 0.7 * dy;
-    }
-
-    void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
-        rectangle.setFillColor(sf::Color::White);
-
-        sf::Text text;
-        text.setFont(font);
-        text.setString(name);
-        text.setCharacterSize(18);
-        text.setCharacterSize(min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
-
-        sf::Sprite pictureSprite;
-        pictureSprite.setTexture(pictureTexture);
-        float pictureHeight = pictureSprite.getLocalBounds().height;
-        float pictureWidth = pictureSprite.getLocalBounds().width;
-        float scale = min(0.5f * dy / pictureHeight, dx / pictureWidth);
-        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
-        pictureSprite.scale(scale, scale);
-
-        availableButton.label = (available ? "Available" : "Unavailable");
-        
-        window.draw(rectangle);
-        window.draw(text);
-        window.draw(pictureSprite);
-        availableButton.Draw(window);
-    }
-};
-
-struct FilledBoxTile {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    string boxName;
-    sf::Texture boxTexture;
-    vector<sf::Texture> itemTextures;
-    vector<string> itemNames;
-    bool IsPresent;
-
-    FilledBoxTile() = default;
-
-    FilledBoxTile(float curdx, float curdy, string curBoxName, const string boxImg, const vector<TItem>& items) {
-        x = 0;
-        y = 0;
-        dx = curdx;
-        dy = curdy;
-        boxName = curBoxName;
-
-        boxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
-
-        itemTextures.resize(items.size());
-        itemNames.resize(items.size());
-        for (size_t i = 0; i < items.size(); i++) {
-            itemTextures[i].loadFromMemory(items[i].GetImage().c_str(), items[i].GetImage().size());
-            itemNames[i] = items[i].GetItemName();
-        }
-
-        IsPresent = false;
-    }
-
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
-    }
-
-    void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
-        rectangle.setFillColor(sf::Color::White);
-        window.draw(rectangle);
-
-        sf::Text boxText;
-        boxText.setFont(font);
-        boxText.setString(boxName);
-        boxText.setCharacterSize(18);
-        boxText.setCharacterSize(min(1.0, dx / boxText.getLocalBounds().width * 0.9) * 18.0);
-        boxText.setFillColor(sf::Color::Black);
-        boxText.setPosition(x + 0.5 * dx - 0.5 * boxText.getLocalBounds().width, y + 5.f);
-
-        sf::Sprite boxSprite;
-        boxSprite.setTexture(boxTexture);
-        float boxHeight = boxSprite.getLocalBounds().height;
-        float boxWidth = boxSprite.getLocalBounds().width;
-        float boxScale = min(0.4f * dy / boxHeight, dx / boxWidth);
-        boxSprite.setPosition(x + 0.5 * dx - 0.5 * boxWidth * boxScale, y + 30.f);
-        boxSprite.scale(boxScale, boxScale);
-
-        window.draw(boxText);
-        window.draw(boxSprite);
-
-        for (size_t i = 0; i < itemNames.size(); i++) {
-            const string& itemName = itemNames[i];
-            const sf::Texture& itemTexture = itemTextures[i];
-
-            sf::Text itemText;
-            itemText.setFont(font);
-            itemText.setString(itemName);
-            itemText.setCharacterSize(18);
-            itemText.setCharacterSize(min(1.0, (dx - 100.f) / itemText.getLocalBounds().width * 0.9) * 18.0);
-            itemText.setFillColor(sf::Color::Black);
-            itemText.setPosition(x + 100.f, y + 0.55 * dy + i * 90.f);
-
-            sf::Sprite itemSprite;
-            itemSprite.setTexture(itemTexture);
-            float itemHeight = itemSprite.getLocalBounds().height;
-            float itemWidth = itemSprite.getLocalBounds().width;
-            float itemScale = min(80 / itemHeight, 80 / itemWidth);
-            itemSprite.setPosition(x + 10.f, y + 0.55 * dy + i * 90.f);
-            itemSprite.scale(itemScale, itemScale);
-
-            window.draw(itemText);
-            window.draw(itemSprite);
-        }
-    }
-};
 
 void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
     if (filledBoxes.size() == 0) {
@@ -1174,7 +825,7 @@ void ChooseMode(sf::RenderWindow& window, TDataBase& dataBase) {
 }
 
 int main() {
-    font = GetFont();
+    NFont::GetFont();
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
     TDataBase dataBase("db.sqlite");
 
