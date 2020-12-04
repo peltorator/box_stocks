@@ -349,14 +349,14 @@ void UserMode(sf::RenderWindow& window) {
                 } else {
                     for (size_t i = 0; i < items.size(); i++) {
                         if (itemTiles[i].IsPresent) {
-                            if (itemTiles[i].minusButton.IsIn(px, py)) {
-                                if (itemTiles[i].cnt > 0) {
-                                    itemTiles[i].cnt--;
+                            if (itemTiles[i].MinusButton.IsIn(px, py)) {
+                                if (itemTiles[i].CurCnt > 0) {
+                                    itemTiles[i].CurCnt--;
                                     shop.DeleteItem(items[i].first.ItemID);
                                 }
-                            } else if (itemTiles[i].plusButton.IsIn(px, py)) {
-                                if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
-                                    itemTiles[i].cnt++;
+                            } else if (itemTiles[i].PlusButton.IsIn(px, py)) {
+                                if (itemTiles[i].CurCnt < itemTiles[i].MaxCnt) {
+                                    itemTiles[i].CurCnt++;
                                     shop.AddItem(items[i].first.ItemID);
                                 }
                             }
@@ -377,7 +377,7 @@ void UserMode(sf::RenderWindow& window) {
         size_t curIndex = 0;
         for (size_t i = 0; i < itemTiles.size(); i++) {
             itemTiles[i].IsPresent = false;
-            if (!StartsWith(itemTiles[i].name, searchField.label)) {
+            if (!StartsWith(itemTiles[i].ItemName, searchField.Label)) {
                 continue;
             }
             if (curIndex / pageSize == pageIndex) {
@@ -470,13 +470,13 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
                 } else {
                     for (size_t i = 0; i < items.size(); i++) {
                         if (itemTiles[i].IsPresent) {
-                            if (itemTiles[i].minusButton.IsIn(px, py)) {
-                                if (itemTiles[i].maxcnt > 0) {
-                                    itemTiles[i].maxcnt--;
+                            if (itemTiles[i].MinusButton.IsIn(px, py)) {
+                                if (itemTiles[i].MaxCnt > 0) {
+                                    itemTiles[i].MaxCnt--;
                                     newItems[i].second--;
                                 }
-                            } else if (itemTiles[i].plusButton.IsIn(px, py)) {
-                                itemTiles[i].maxcnt++;
+                            } else if (itemTiles[i].PlusButton.IsIn(px, py)) {
+                                itemTiles[i].MaxCnt++;
                                 newItems[i].second++;
                             }
                         }
@@ -495,7 +495,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         size_t curIndex = 0;
         for (size_t i = 0; i < itemTiles.size(); i++) {
             itemTiles[i].IsPresent = false;
-            if (!StartsWith(itemTiles[i].name, searchField.label)) {
+            if (!StartsWith(itemTiles[i].ItemName, searchField.Label)) {
                 continue;
             }
             if (curIndex / pageSize == pageIndex) {
@@ -585,14 +585,14 @@ void AdminCreateItem(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    string selectQuery = "select itemName from Item where itemName = '" + nameField.label + "';";
+                    string selectQuery = "select itemName from Item where itemName = '" + nameField.Label + "';";
                     auto selectResponse = NDataBase::Query(selectQuery);
                     if (!selectResponse.empty()) {
                         items.push_back(fakeItem);
                     } else {
-                        TItem newItem(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label));
+                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label));
                         items.push_back(newItem);
-                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.ItemName + "', " + to_string(newItem.Weight) + ", " + to_string(newItem.Volume) + ", 0, '" + GetImageBytes(imageField.label) + "');";
+                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.ItemName + "', " + to_string(newItem.Weight) + ", " + to_string(newItem.Volume) + ", 0, '" + GetImageBytes(imageField.Label) + "');";
                         NDataBase::Query(insertQuery);
                     }
                     nameField.Clear();
@@ -679,12 +679,12 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
                 } else {
                     for (size_t i = 0; i < boxes.size(); i++) {
                         if (boxTiles[i].IsPresent) {
-                            if (boxTiles[i].availableButton.IsIn(px, py)) {
-                                if (boxTiles[i].available) {
-                                    boxTiles[i].available = false;
+                            if (boxTiles[i].AvailableButton.IsIn(px, py)) {
+                                if (boxTiles[i].Available) {
+                                    boxTiles[i].Available = false;
                                     newBoxes[i].second--;
                                 } else {
-                                    boxTiles[i].available = true;
+                                    boxTiles[i].Available = true;
                                     newBoxes[i].second++;
                                 }
                             }
@@ -704,7 +704,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
         size_t curIndex = 0;
         for (size_t i = 0; i < boxTiles.size(); i++) {
             boxTiles[i].IsPresent = false;
-            if (!StartsWith(boxTiles[i].name, searchField.label)) {
+            if (!StartsWith(boxTiles[i].BoxName, searchField.Label)) {
                 continue;
             }
             if (curIndex / pageSize == pageIndex) {
@@ -786,14 +786,14 @@ void AdminCreateBox(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    string selectQuery = "select boxName from Box where boxName = '" + nameField.label + "';";
+                    string selectQuery = "select boxName from Box where boxName = '" + nameField.Label + "';";
                     auto selectResponse = NDataBase::Query(selectQuery);
                     if (!selectResponse.empty()) {
                         boxes.push_back(fakeBox);
                     } else {
-                        TBox newBox(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label));
+                        TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
                         boxes.push_back(newBox);
-                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.BoxName + "', " + to_string(newBox.MaxWeight) + ", " + to_string(newBox.MaxVolume) + ", " + to_string(newBox.Cost) + ", 1, '" + GetImageBytes(imageField.label) + "');";
+                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.BoxName + "', " + to_string(newBox.MaxWeight) + ", " + to_string(newBox.MaxVolume) + ", " + to_string(newBox.Cost) + ", 1, '" + GetImageBytes(imageField.Label) + "');";
                         NDataBase::Query(insertQuery);
                     }
                     nameField.Clear();
@@ -956,7 +956,7 @@ void ShowHistory(sf::RenderWindow& window) {
                 } else {
                     for (size_t i = 0; i < orders.size(); i++) {
                         if (orderButtons[i].IsPresent && orderButtons[i].IsIn(px, py)) {
-                            ShowOrder(window, orders[i].FilledBoxes, availableBoxes, orderButtons[i].label);
+                            ShowOrder(window, orders[i].FilledBoxes, availableBoxes, orderButtons[i].Label);
                             break;
                         }
                     }

@@ -6,84 +6,88 @@
 #include "font.cpp"
 
 struct ItemTile {
-    float x;
-    float y;
-    float dx;
-    float dy;
+    float X;
+    float Y;
+    float Dx;
+    float Dy;
     uint64_t ItemID;
-    std::string name;
-    uint32_t cnt;
-    uint32_t maxcnt;
+    std::string ItemName;
+    uint32_t CurCnt;
+    uint32_t MaxCnt;
     bool ShowCnt;
-    Button minusButton;
-    Button plusButton;
-    sf::Texture pictureTexture;
+    Button MinusButton;
+    Button PlusButton;
+    sf::Texture PictureTexture;
     bool IsPresent;
 
     ItemTile() = default;
 
-    ItemTile(float curdx, float curdy, uint64_t itemID, std::string curname, uint32_t curmaxcnt, const std::string img, bool showCnt) {
-        x = 0;
-        y = 0;
-        dx = curdx;
-        dy = curdy;
+    ItemTile(const float dx, const float dy, const uint64_t itemID, const std::string& itemName, const uint32_t maxCnt, const std::string& img, const bool showCnt) {
+        X = 0;
+        Y = 0;
+        Dx = dx;
+        Dy = dy;
         ItemID = itemID;
-        name = curname;
-        cnt = 0;
-        maxcnt = curmaxcnt;
+        ItemName = itemName;
+        CurCnt = 0;
+        MaxCnt = maxCnt;
         ShowCnt = showCnt;
-        minusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "-");
-        plusButton = Button(0, 0, 0.25 * dx, 0.2 * dy, "+");
+        MinusButton = Button(0, 0, 0.25 * Dx, 0.2 * Dy, "-");
+        PlusButton = Button(0, 0, 0.25 * Dx, 0.2 * Dy, "+");
 
-        pictureTexture.loadFromMemory(img.c_str(), img.size());
+        PictureTexture.loadFromMemory(img.c_str(), img.size());
 
         IsPresent = false;
     }
 
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
-        minusButton.x = x + 0.1 * dx;
-        minusButton.y = y + 0.7 * dy;
-        plusButton.x = x + 0.65 * dx;
-        plusButton.y = y + 0.7 * dy;
+    void UpdateButtonsPositions() {
+        MinusButton.X = X + 0.1 * Dx;
+        MinusButton.Y = Y + 0.7 * Dy;
+        PlusButton.X = X + 0.65 * Dx;
+        PlusButton.Y = Y + 0.7 * Dy;
+    }
+
+    void SetPosition(float x, float y) {
+        X = x;
+        Y = y;
+        UpdateButtonsPositions();
     }
 
     void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
+        sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
+        rectangle.setPosition(X, Y);
         rectangle.setFillColor(sf::Color::White);
 
-        sf::Text text;
-        text.setFont(NFont::font);
-        text.setString(name);
-        text.setCharacterSize(18);
-        text.setCharacterSize(std::min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
+        sf::Text nameText;
+        nameText.setFont(NFont::font);
+        nameText.setString(ItemName);
+        nameText.setCharacterSize(18);
+        nameText.setCharacterSize(std::min(1.0, Dx / nameText.getLocalBounds().width * 0.9) * 18.0);
+        nameText.setFillColor(sf::Color::Black);
+        nameText.setPosition(X + 0.5 * Dx - 0.5 * nameText.getLocalBounds().width, Y + 0.54 * Dy);
 
         sf::Text cntText;
         cntText.setFont(NFont::font);
-        cntText.setString((ShowCnt ? std::to_string(cnt) + " / " : "") + std::to_string(maxcnt));
+        cntText.setString((ShowCnt ? std::to_string(CurCnt) + " / " : "") + std::to_string(MaxCnt));
         cntText.setCharacterSize(18);
-        cntText.setCharacterSize(std::min(1.0, 0.25 * dx / cntText.getLocalBounds().width) * 18.0);
+        cntText.setCharacterSize(std::min(1.0, 0.25 * Dx / cntText.getLocalBounds().width) * 18.0);
         cntText.setFillColor(sf::Color::Black);
-        cntText.setPosition(x + 0.5 * dx - 0.5 * cntText.getLocalBounds().width, y + 0.8 * dy - 0.5 * cntText.getLocalBounds().height);
+        cntText.setPosition(X + 0.5 * Dx - 0.5 * cntText.getLocalBounds().width, Y + 0.8 * Dy - 0.5 * cntText.getLocalBounds().height);
 
         sf::Sprite pictureSprite;
-        pictureSprite.setTexture(pictureTexture);
+        pictureSprite.setTexture(PictureTexture);
         float pictureHeight = pictureSprite.getLocalBounds().height;
         float pictureWidth = pictureSprite.getLocalBounds().width;
-        float scale = std::min(0.5f * dy / pictureHeight, dx / pictureWidth);
-        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
+        float scale = std::min(0.5f * Dy / pictureHeight, Dx / pictureWidth);
+        pictureSprite.setPosition(X + 0.5 * Dx - 0.5 * pictureWidth * scale, Y + 5.f);
         pictureSprite.scale(scale, scale);
         
         window.draw(rectangle);
-        window.draw(text);
+        window.draw(nameText);
         window.draw(cntText);
         window.draw(pictureSprite);
-        minusButton.Draw(window);
-        plusButton.Draw(window);
+        MinusButton.Draw(window);
+        PlusButton.Draw(window);
     }
 };
 

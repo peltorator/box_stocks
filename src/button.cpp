@@ -5,41 +5,41 @@
 #include "font.cpp"
 
 struct Button {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    std::string label;
+    float X;
+    float Y;
+    float Dx;
+    float Dy;
+    std::string Label;
     bool IsPresent;
 
     Button() = default;
 
-    Button(float x, float y, float dx, float dy, std::string label)
-        : x(x)
-        , y(y)
-        , dx(dx)
-        , dy(dy)
-        , label(label)
+    Button(const float x, const float y, const float dx, const float dy, const std::string& label, const bool isPresent = true)
+        : X(x)
+        , Y(y)
+        , Dx(dx)
+        , Dy(dy)
+        , Label(label)
         , IsPresent(true) {}
 
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
+    void SetPosition(const float x, const float y) {
+        X = x;
+        Y = y;
     }
 
     void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
+        sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
+        rectangle.setPosition(X, Y);
         rectangle.setFillColor(sf::Color::White);
 
         sf::Text text;
         text.setFont(NFont::font);
-        text.setString(label);
+        text.setString(Label);
         text.setCharacterSize(18);
-        text.setCharacterSize(std::min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
+        text.setCharacterSize(std::min(1.0, Dx / text.getLocalBounds().width * 0.9) * 18.0);
         text.setFillColor(sf::Color::Black);
-        float cx = x + dx * 0.5 - text.getLocalBounds().width * 0.5;
-        float cy = y + dy * 0.5 - text.getLocalBounds().height * 0.5;
+        float cx = X + Dx * 0.5 - text.getLocalBounds().width * 0.5;
+        float cy = Y + Dy * 0.5 - text.getLocalBounds().height * 0.5;
         text.setPosition(cx, cy);
         
         window.draw(rectangle);
@@ -47,7 +47,7 @@ struct Button {
     }
 
     bool IsIn(float px, float py) {
-        return x <= px && px <= x + dx && y <= py && py <= y + dy;
+        return X <= px && px <= X + Dx && Y <= py && py <= Y + Dy;
     }
 };
 

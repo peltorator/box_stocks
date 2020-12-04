@@ -5,72 +5,72 @@
 #include "font.cpp"
 
 struct TextField {
-    float x;
-    float y;
-    float dx;
-    float dy;
-    std::string name;
-    std::string label;
-    bool needPop;
+    float X;
+    float Y;
+    float Dx;
+    float Dy;
+    std::string Name;
+    std::string Label;
+    bool NeedPop;
 
     TextField() = default;
 
-    TextField(float x, float y, float dx, float dy, std::string name)
-        : x(x)
-        , y(y)
-        , dx(dx)
-        , dy(dy)
-        , name(name)
-        , label("")
-        , needPop(false) {}
+    TextField(const float x, const float y, const float dx, const float dy, const std::string& name)
+        : X(x)
+        , Y(y)
+        , Dx(dx)
+        , Dy(dy)
+        , Name(name)
+        , Label("")
+        , NeedPop(false) {}
 
     void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
+        sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
+        rectangle.setPosition(X, Y);
         rectangle.setFillColor(sf::Color::White);
 
-        sf::Text text;
-        text.setFont(NFont::font);
-        text.setString(label);
-        text.setCharacterSize(18);
-        text.setCharacterSize(std::min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        float cx = x + dx * 0.1;
-        float cy = y + dy * 0.5 - text.getLocalBounds().height * 0.5;
-        text.setPosition(cx, cy);
+        sf::Text labelText;
+        labelText.setFont(NFont::font);
+        labelText.setString(Label);
+        labelText.setCharacterSize(18);
+        labelText.setCharacterSize(std::min(1.0, Dx / labelText.getLocalBounds().width * 0.9) * 18.0);
+        labelText.setFillColor(sf::Color::Black);
+        float cx = X + Dx * 0.1;
+        float cy = Y + Dy * 0.5 - labelText.getLocalBounds().height * 0.5;
+        labelText.setPosition(cx, cy);
 
         sf::Text nameText;
         nameText.setFont(NFont::font);
-        nameText.setString(name);
+        nameText.setString(Name);
         nameText.setCharacterSize(18);
-        nameText.setCharacterSize(std::min(1.0, dx / nameText.getLocalBounds().width * 0.9) * 18.0);
+        nameText.setCharacterSize(std::min(1.0, Dx / nameText.getLocalBounds().width * 0.9) * 18.0);
         nameText.setFillColor(sf::Color::White);
-        float cx2 = x + dx * 0.5 - nameText.getLocalBounds().width * 0.5;
-        float cy2 = y - dy * 0.2 - nameText.getLocalBounds().height;
+        float cx2 = X + Dx * 0.5 - nameText.getLocalBounds().width * 0.5;
+        float cy2 = Y - Dy * 0.2 - nameText.getLocalBounds().height;
         nameText.setPosition(cx2, cy2);
         
         window.draw(rectangle);
-        window.draw(text);
+        window.draw(labelText);
         window.draw(nameText);
     }
 
     bool IsIn(float px, float py) {
-        return x <= px && px <= x + dx && y <= py && py <= y + dy;
+        return X <= px && px <= X + Dx && Y <= py && py <= Y + Dy;
     }
 
     void AddChar(const char& c) {
-        label.push_back(c);
+        Label.push_back(c);
     }
 
     void PopChar() {
-        if (!label.empty() && needPop) {
-            label.pop_back();
+        if (!Label.empty() && NeedPop) {
+            Label.pop_back();
         }
-        needPop = !needPop;
+        NeedPop = !NeedPop;
     }
 
     void Clear() {
-        label.clear();
+        Label.clear();
     }
 };
 

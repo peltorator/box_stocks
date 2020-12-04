@@ -5,69 +5,73 @@
 #include "font.cpp"
 
 struct BoxTile {
-    float x;
-    float y;
-    float dx;
-    float dy;
+    float X;
+    float Y;
+    float Dx;
+    float Dy;
     uint64_t BoxID;
-    std::string name;
-    bool available;
-    Button availableButton;
-    sf::Texture pictureTexture;
+    std::string BoxName;
+    bool Available;
+    Button AvailableButton;
+    sf::Texture PictureTexture;
     bool IsPresent;
 
     BoxTile() = default;
 
-    BoxTile(float curdx, float curdy, uint64_t boxID, std::string curname, bool curavailable, const std::string img) {
-        x = 0;
-        y = 0;
-        dx = curdx;
-        dy = curdy;
+    BoxTile(const float dx, const float dy, const uint64_t boxID, const std::string& boxName, const bool available, const std::string& img) {
+        X = 0;
+        Y = 0;
+        Dx = dx;
+        Dy = dy;
         BoxID = boxID;
-        name = curname;
-        available = curavailable;
-        availableButton = Button(0, 0, 0.8 * dx, 0.2 * dy, "");
+        BoxName = boxName;
+        Available = available;
+        AvailableButton = Button(0, 0, 0.8 * Dx, 0.2 * Dy, "");
 
-        pictureTexture.loadFromMemory(img.c_str(), img.size());
+        PictureTexture.loadFromMemory(img.c_str(), img.size());
 
         IsPresent = false;
     }
 
-    void SetPosition(float curx, float cury) {
-        x = curx;
-        y = cury;
-        
-        availableButton.x = x + 0.1 * dx;
-        availableButton.y = y + 0.7 * dy;
+    void UpdateButtonsPositions() {
+        AvailableButton.X = X + 0.1 * Dx;
+        AvailableButton.Y = Y + 0.7 * Dy;
+    }
+
+    void SetPosition(float x, float y) {
+        X = x;
+        Y = y;
+     
+        UpdateButtonsPositions();
     }
 
     void Draw(sf::RenderWindow& window) {
-        sf::RectangleShape rectangle(sf::Vector2f(dx, dy));
-        rectangle.setPosition(x, y);
+        sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
+        rectangle.setPosition(X, Y);
         rectangle.setFillColor(sf::Color::White);
 
-        sf::Text text;
-        text.setFont(NFont::font);
-        text.setString(name);
-        text.setCharacterSize(18);
-        text.setCharacterSize(std::min(1.0, dx / text.getLocalBounds().width * 0.9) * 18.0);
-        text.setFillColor(sf::Color::Black);
-        text.setPosition(x + 0.5 * dx - 0.5 * text.getLocalBounds().width, y + 0.54 * dy);
+        sf::Text nameText;
+        nameText.setFont(NFont::font);
+        nameText.setString(BoxName);
+        nameText.setCharacterSize(18);
+        nameText.setCharacterSize(std::min(1.0, Dx / nameText.getLocalBounds().width * 0.9) * 18.0);
+        nameText.setFillColor(sf::Color::Black);
+        nameText.setPosition(X + 0.5 * Dx - 0.5 * nameText.getLocalBounds().width, Y + 0.54 * Dy);
 
         sf::Sprite pictureSprite;
-        pictureSprite.setTexture(pictureTexture);
+        pictureSprite.setTexture(PictureTexture);
         float pictureHeight = pictureSprite.getLocalBounds().height;
         float pictureWidth = pictureSprite.getLocalBounds().width;
-        float scale = std::min(0.5f * dy / pictureHeight, dx / pictureWidth);
-        pictureSprite.setPosition(x + 0.5 * dx - 0.5 * pictureWidth * scale, y + 5.f);
+        float scale = std::min(0.5f * Dy / pictureHeight, Dx / pictureWidth);
+        pictureSprite.setPosition(X + 0.5 * Dx - 0.5 * pictureWidth * scale, Y + 5.f);
         pictureSprite.scale(scale, scale);
 
-        availableButton.label = (available ? "Available" : "Unavailable");
+        AvailableButton.Label = (Available ? "Available" : "Unavailable");
         
         window.draw(rectangle);
-        window.draw(text);
+        window.draw(nameText);
         window.draw(pictureSprite);
-        availableButton.Draw(window);
+        AvailableButton.Draw(window);
     }
 };
 
