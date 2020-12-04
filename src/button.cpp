@@ -4,7 +4,7 @@
 #include <string>
 #include "font.cpp"
 
-struct Button {
+struct TButton {
     float X;
     float Y;
     float Dx;
@@ -12,9 +12,9 @@ struct Button {
     std::string Label;
     bool IsPresent;
 
-    Button() = default;
+    TButton() = default;
 
-    Button(const float x, const float y, const float dx, const float dy, const std::string& label, const bool isPresent = true)
+    TButton(const float x, const float y, const float dx, const float dy, const std::string& label, const bool isPresent = true)
         : X(x)
         , Y(y)
         , Dx(dx)

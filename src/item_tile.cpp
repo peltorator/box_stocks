@@ -5,7 +5,7 @@
 #include "button.cpp"
 #include "font.cpp"
 
-struct ItemTile {
+struct TItemTile {
     float X;
     float Y;
     float Dx;
@@ -15,14 +15,14 @@ struct ItemTile {
     uint32_t CurCnt;
     uint32_t MaxCnt;
     bool ShowCnt;
-    Button MinusButton;
-    Button PlusButton;
+    TButton MinusButton;
+    TButton PlusButton;
     sf::Texture PictureTexture;
     bool IsPresent;
 
-    ItemTile() = default;
+    TItemTile() = default;
 
-    ItemTile(const float dx, const float dy, const uint64_t itemID, const std::string& itemName, const uint32_t maxCnt, const std::string& img, const bool showCnt) {
+    TItemTile(const float dx, const float dy, const uint64_t itemID, const std::string& itemName, const uint32_t maxCnt, const std::string& img, const bool showCnt) {
         X = 0;
         Y = 0;
         Dx = dx;
@@ -32,8 +32,8 @@ struct ItemTile {
         CurCnt = 0;
         MaxCnt = maxCnt;
         ShowCnt = showCnt;
-        MinusButton = Button(0, 0, 0.25 * Dx, 0.2 * Dy, "-");
-        PlusButton = Button(0, 0, 0.25 * Dx, 0.2 * Dy, "+");
+        MinusButton = TButton(0, 0, 0.25 * Dx, 0.2 * Dy, "-");
+        PlusButton = TButton(0, 0, 0.25 * Dx, 0.2 * Dy, "+");
 
         PictureTexture.loadFromMemory(img.c_str(), img.size());
 

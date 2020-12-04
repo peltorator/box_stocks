@@ -4,7 +4,7 @@
 #include "button.cpp"
 #include "font.cpp"
 
-struct BoxTile {
+struct TBoxTile {
     float X;
     float Y;
     float Dx;
@@ -12,13 +12,13 @@ struct BoxTile {
     uint64_t BoxID;
     std::string BoxName;
     bool Available;
-    Button AvailableButton;
+    TButton AvailableButton;
     sf::Texture PictureTexture;
     bool IsPresent;
 
-    BoxTile() = default;
+    TBoxTile() = default;
 
-    BoxTile(const float dx, const float dy, const uint64_t boxID, const std::string& boxName, const bool available, const std::string& img) {
+    TBoxTile(const float dx, const float dy, const uint64_t boxID, const std::string& boxName, const bool available, const std::string& img) {
         X = 0;
         Y = 0;
         Dx = dx;
@@ -26,7 +26,7 @@ struct BoxTile {
         BoxID = boxID;
         BoxName = boxName;
         Available = available;
-        AvailableButton = Button(0, 0, 0.8 * Dx, 0.2 * Dy, "");
+        AvailableButton = TButton(0, 0, 0.8 * Dx, 0.2 * Dy, "");
 
         PictureTexture.loadFromMemory(img.c_str(), img.size());
 

@@ -5,7 +5,7 @@
 #include <SFML/Graphics.hpp>
 #include "font.cpp"
 
-struct FilledBoxTile {
+struct TFilledBoxTile {
     float X;
     float Y;
     float Dx;
@@ -16,9 +16,9 @@ struct FilledBoxTile {
     std::vector<std::string> ItemNames;
     bool IsPresent;
 
-    FilledBoxTile() = default;
+    TFilledBoxTile() = default;
 
-    FilledBoxTile(const float dx, const float dy, const std::string &boxName, const std::string& boxImg, const std::vector<TItem>& items) {
+    TFilledBoxTile(const float dx, const float dy, const std::string &boxName, const std::string& boxImg, const std::vector<TItem>& items) {
         X = 0;
         Y = 0;
         Dx = dx;
@@ -78,12 +78,13 @@ struct FilledBoxTile {
             itemText.setCharacterSize(std::min(1.0, (Dx - 100.f) / itemText.getLocalBounds().width * 0.9) * 18.0);
             itemText.setFillColor(sf::Color::Black);
             itemText.setPosition(X + 85.f, Y + 0.55 * Dy + i * 90.f + 15.f);
-            sf::Sprite itemSprite;
+
             sf::CircleShape itemShape(30);
             itemShape.setTexture(&itemTexture);
-            /*float itemHeight = itemSprite.getLocalBounds().height;
-            float itemWidth = itemSprite.getLocalBounds().width;
-            float itemScale = std::min(80 / itemHeight, 80 / itemWidth);*/
+            float imageH = itemTexture.getSize().y;
+            float imageW = itemTexture.getSize().x;
+            float side = std::min(imageW, imageH);
+            itemShape.setTextureRect(sf::IntRect((imageW - side) / 2, (imageH - side) / 2, side, side));
             itemShape.setPosition(X + 10.f, Y + 0.55 * Dy + i * 90.f);
 
             window.draw(itemText);

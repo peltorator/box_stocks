@@ -32,7 +32,7 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
     if (title.empty()) {
         title = "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:";
     }
-    vector<FilledBoxTile> filledBoxTiles;
+    vector<TFilledBoxTile> filledTBoxTiles;
     for (size_t i = 0; i < filledBoxes.size(); i++) {
         string curImage;
         for (const auto& box : boxes) {
@@ -40,12 +40,12 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
                 curImage = box.Image;
             }
         }
-        filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].Box.BoxName, curImage, filledBoxes[i].Items));
+        filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].Box.BoxName, curImage, filledBoxes[i].Items));
     }
 
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
 
     size_t pageIndex = 0;
     const size_t columns = 5;
@@ -68,7 +68,7 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
                         pageIndex--;
                     }
                 } else if (rightButton.IsIn(px, py)) {
-                    if ((pageIndex + 1) * columns < filledBoxTiles.size()) {
+                    if ((pageIndex + 1) * columns < filledTBoxTiles.size()) {
                         pageIndex++;
                     }
                 }
@@ -82,21 +82,21 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
             leftButton.Draw(window);
         }
         size_t curIndex = 0;
-        for (size_t i = 0; i < filledBoxTiles.size(); i++) {
-            filledBoxTiles[i].IsPresent = false;
+        for (size_t i = 0; i < filledTBoxTiles.size(); i++) {
+            filledTBoxTiles[i].IsPresent = false;
             if (curIndex / columns == pageIndex) {
                 size_t innerIndex = curIndex % columns;
-                filledBoxTiles[i].SetPosition(50.f + innerIndex * 265.f, 110.f);
-                filledBoxTiles[i].IsPresent = true;
+                filledTBoxTiles[i].SetPosition(50.f + innerIndex * 265.f, 110.f);
+                filledTBoxTiles[i].IsPresent = true;
             }
             curIndex++;
         }
         if ((pageIndex + 1) * columns < curIndex) {
             rightButton.Draw(window);
         }
-        for (FilledBoxTile& filledBoxTile : filledBoxTiles) {
-            if (filledBoxTile.IsPresent) {
-                filledBoxTile.Draw(window);
+        for (TFilledBoxTile& filledTBoxTile : filledTBoxTiles) {
+            if (filledTBoxTile.IsPresent) {
+                filledTBoxTile.Draw(window);
             }
         }
         window.display();
@@ -105,7 +105,7 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
 
 void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
     if (filledBoxes.size() == 0) {
-        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+        TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
         while (window.isOpen()) {
             sf::Event event;
             while (window.pollEvent(event))
@@ -132,7 +132,7 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
 }
 
 void DidntBuyAnything(sf::RenderWindow& window) {
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
@@ -159,14 +159,14 @@ void UserMode(sf::RenderWindow& window) {
     vector<pair<TItem, uint32_t>> items = GetItems();
     TShop shop(items, availableBoxes);
 
-    vector<ItemTile> itemTiles;
+    vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, true));
+        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, true));
     }
-    Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
 
     TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
@@ -251,7 +251,7 @@ void UserMode(sf::RenderWindow& window) {
         if ((pageIndex + 1) * pageSize < curIndex) {
             rightButton.Draw(window);
         }
-        for (ItemTile& itemTile : itemTiles) {
+        for (TItemTile& itemTile : itemTiles) {
             if (itemTile.IsPresent) {
                 itemTile.Draw(window);
             }
@@ -283,13 +283,13 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         newItems[i] = {items[i].first, 0};
     }
 
-    vector<ItemTile> itemTiles;
+    vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, false));
+        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, false));
     }
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
-    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
+    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
     
     TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
@@ -369,7 +369,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         if ((pageIndex + 1) * pageSize < curIndex) {
             rightButton.Draw(window);
         }
-        for (ItemTile& itemTile : itemTiles) {
+        for (TItemTile& itemTile : itemTiles) {
             if (itemTile.IsPresent) {
                 itemTile.Draw(window);
             }
@@ -390,12 +390,12 @@ string GetItemsString(const vector<TItem>& items) {
 
 void AdminCreateItem(sf::RenderWindow& window) {
     static TItem fakeItem(0, "already exists!", 0, 0);
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
     TextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
     TextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
     TextField imageField(1000.f, 550.f, 100.f, 50.f, "Image Path");
-    Button addButton(1250.f, 550.f, 100.f, 50.f, "Add");
+    TButton addButton(1250.f, 550.f, 100.f, 50.f, "Add");
     string selected = "name";
     vector<TItem> items;
     while (window.isOpen()) {
@@ -478,13 +478,13 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
         newBoxes[i] = {boxes[i].first, 0};
     }
 
-    vector<BoxTile> boxTiles;
+    vector<TBoxTile> boxTiles;
     for (size_t i = 0; i < boxes.size(); i++) {
-        boxTiles.push_back(BoxTile(250.f, 250.f, boxes[i].first.BoxID, boxes[i].first.BoxName, boxes[i].second, boxes[i].first.Image));
+        boxTiles.push_back(TBoxTile(250.f, 250.f, boxes[i].first.BoxID, boxes[i].first.BoxName, boxes[i].second, boxes[i].first.Image));
     }
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
-    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
+    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
     
     TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
@@ -564,7 +564,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
         if ((pageIndex + 1) * pageSize < curIndex) {
             rightButton.Draw(window);
         }
-        for (BoxTile& boxTile : boxTiles) {
+        for (TBoxTile& boxTile : boxTiles) {
             if (boxTile.IsPresent) {
                 boxTile.Draw(window);
             }
@@ -585,13 +585,13 @@ string GetBoxesString(const vector<TBox>& boxes) {
 
 void AdminCreateBox(sf::RenderWindow& window) {
     static TBox fakeBox(0, "already exists!", 0, 0, 0);
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
     TextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
     TextField volumeField(500.f, 550.f, 100.f, 50.f, "MaxVolume");
     TextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
     TextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
-    Button addButton(1100.f, 550.f, 100.f, 50.f, "Add");
+    TButton addButton(1100.f, 550.f, 100.f, 50.f, "Add");
     string selected = "name";
     vector<TBox> boxes;
     while (window.isOpen()) {
@@ -675,11 +675,11 @@ void AdminCreateBox(sf::RenderWindow& window) {
 }
 
 void AdminMode(sf::RenderWindow& window) {
-    Button addItemButton(350.f, 100.f, 200.f, 100.f, "Add/Delete Items");
-    Button createItemButton(350.f, 300.f, 200.f, 100.f, "Create New Item");
-    Button addBoxButton(850.f, 100.f, 200.f, 100.f, "Add/Delete Boxes");
-    Button createBoxButton(850.f, 300.f, 200.f, 100.f, "Create New Box");
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton addItemButton(350.f, 100.f, 200.f, 100.f, "Add/Delete Items");
+    TButton createItemButton(350.f, 300.f, 200.f, 100.f, "Create New Item");
+    TButton addBoxButton(850.f, 100.f, 200.f, 100.f, "Add/Delete Boxes");
+    TButton createBoxButton(850.f, 300.f, 200.f, 100.f, "Create New Box");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
 
     while (window.isOpen()) {
         sf::Event event;
@@ -717,16 +717,16 @@ void AdminMode(sf::RenderWindow& window) {
 
 void ShowHistory(sf::RenderWindow& window) {
     vector<TOrder> orders = GetOrders();
-    vector<Button> orderButtons(orders.size());
+    vector<TButton> orderButtons(orders.size());
     for (size_t i = 0; i < orders.size(); i++) {
-        orderButtons[i] = Button(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
+        orderButtons[i] = TButton(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
     }
 
     vector<TBox> availableBoxes = GetAvailableBoxes();
 
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
 
     size_t pageIndex = 0;
     const size_t rows = 13;
@@ -782,7 +782,7 @@ void ShowHistory(sf::RenderWindow& window) {
         if ((pageIndex + 1) * rows < curIndex) {
             rightButton.Draw(window);
         }
-        for (Button& orderButton : orderButtons) {
+        for (TButton& orderButton : orderButtons) {
             if (orderButton.IsPresent) {
                 orderButton.Draw(window);
             }
@@ -792,10 +792,10 @@ void ShowHistory(sf::RenderWindow& window) {
 }
 
 void ChooseMode(sf::RenderWindow& window) {
-    Button adminButton(200.f, 350.f, 200.f, 100.f, "Admin");
-    Button userButton(600.f, 350.f, 200.f, 100.f, "Buy");
-    Button historyButton(1000.f, 350.f, 200.f, 100.f, "See History");
-    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Close The App");
+    TButton adminButton(200.f, 350.f, 200.f, 100.f, "Admin");
+    TButton userButton(600.f, 350.f, 200.f, 100.f, "Buy");
+    TButton historyButton(1000.f, 350.f, 200.f, 100.f, "See History");
+    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Close The App");
 
     while (window.isOpen()) {
         sf::Event event;

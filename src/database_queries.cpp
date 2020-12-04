@@ -7,6 +7,7 @@
 #include <sstream>
 #include "item.cpp"
 #include "box.cpp"
+#include "order.cpp"
 #include "filled_box.cpp"
 #include "database.cpp"
 #include "helper_functions.cpp"
