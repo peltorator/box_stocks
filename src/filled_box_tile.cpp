@@ -30,8 +30,8 @@ struct FilledBoxTile {
         itemTextures.resize(items.size());
         itemNames.resize(items.size());
         for (size_t i = 0; i < items.size(); i++) {
-            itemTextures[i].loadFromMemory(items[i].GetImage().c_str(), items[i].GetImage().size());
-            itemNames[i] = items[i].GetItemName();
+            itemTextures[i].loadFromMemory(items[i].Image.c_str(), items[i].Image.size());
+            itemNames[i] = items[i].ItemName;
         }
 
         IsPresent = false;

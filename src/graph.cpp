@@ -42,14 +42,14 @@ uint64_t ToInt(const string& s) {
 
 void UpdateItems(sf::RenderWindow& window, const vector<pair<TItem, int32_t>>& items, TDataBase& dataBase) {
     for (const auto& [item, amount] : items) {
-        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemID = " + to_string(item.GetItemID()) + ";";
+        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemID = " + to_string(item.ItemID) + ";";
         dataBase.Query(updateQuery);
     }
 }
 
 void UpdateBoxes(sf::RenderWindow& window, const vector<pair<TBox, int32_t>>& boxes, TDataBase& dataBase) {
     for (const auto& [box, amount] : boxes) {
-        string updateQuery = "update Box set available = available + " + to_string(amount) + " where boxID = " + to_string(box.GetBoxID()) + ";";
+        string updateQuery = "update Box set available = available + " + to_string(amount) + " where boxID = " + to_string(box.BoxID) + ";";
         dataBase.Query(updateQuery);
     }
 }
@@ -93,11 +93,11 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
     for (size_t i = 0; i < filledBoxes.size(); i++) {
         string curImage;
         for (const auto& box : boxes) {
-            if (box.GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
-                curImage = box.GetImage();
+            if (box.BoxID == filledBoxes[i].Box.BoxID) {
+                curImage = box.Image;
             }
         }
-        filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].GetBox().GetBoxName(), curImage, filledBoxes[i].GetItems()));
+        filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].Box.BoxName, curImage, filledBoxes[i].Items));
     }
 
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -238,12 +238,12 @@ void SaveOrder(const vector<TFilledBox>& filledBoxes, TDataBase& dataBase) {
     int64_t orderID = dataBase.GetLastInsertID();
     
     for (const TFilledBox& filledBox : filledBoxes) {
-        const string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + to_string(filledBox.GetBox().GetBoxID()) + ", " + to_string(orderID) + ");";
+        const string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + to_string(filledBox.Box.BoxID) + ", " + to_string(orderID) + ");";
         dataBase.Query(insertFilledBoxQuery);
         int64_t filledBoxID = dataBase.GetLastInsertID();
 
-        for (const TItem& item : filledBox.GetItems()) {
-            const string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + to_string(item.GetItemID()) + ", " + to_string(filledBoxID) + ");";
+        for (const TItem& item : filledBox.Items) {
+            const string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + to_string(item.ItemID) + ", " + to_string(filledBoxID) + ");";
             dataBase.Query(insertItemsForFilledBoxQuery);
         }
     }
@@ -261,7 +261,7 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
 
     vector<ItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.GetItemID(), items[i].first.GetItemName(), items[i].second, items[i].first.GetImage(), true));
+        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, true));
     }
     Button finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -313,12 +313,12 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
                             if (itemTiles[i].minusButton.IsIn(px, py)) {
                                 if (itemTiles[i].cnt > 0) {
                                     itemTiles[i].cnt--;
-                                    shop.DeleteItem(items[i].first.GetItemID());
+                                    shop.DeleteItem(items[i].first.ItemID);
                                 }
                             } else if (itemTiles[i].plusButton.IsIn(px, py)) {
                                 if (itemTiles[i].cnt < itemTiles[i].maxcnt) {
                                     itemTiles[i].cnt++;
-                                    shop.AddItem(items[i].first.GetItemID());
+                                    shop.AddItem(items[i].first.ItemID);
                                 }
                             }
                         }
@@ -366,7 +366,7 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
         vector<TFilledBox> filledBoxes = shop.Buy();
         vector<pair<TItem, int32_t>> boughtItems;
         for (const TFilledBox& filledBox : filledBoxes) {
-            for (const TItem& item : filledBox.GetItems()) {
+            for (const TItem& item : filledBox.Items) {
                 boughtItems.emplace_back(item, -1);
             }
         }
@@ -385,7 +385,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
 
     vector<ItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.GetItemID(), items[i].first.GetItemName(), items[i].second, items[i].first.GetImage(), false));
+        itemTiles.push_back(ItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, false));
     }
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
     Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
@@ -483,7 +483,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
 string GetItemsString(const vector<TItem>& items) {
     string ans = "Your new items:\nName\tWeight\tVolume";
     for (const TItem& item : items) {
-        ans += "\n" + item.GetItemName() + "\t\t\t" + to_string(item.GetWeight()) + "\t\t\t" + to_string(item.GetVolume());
+        ans += "\n" + item.ItemName + "\t\t\t" + to_string(item.Weight) + "\t\t\t" + to_string(item.Volume);
     }
     return ans;
 }
@@ -553,7 +553,7 @@ void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
                     } else {
                         TItem newItem(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label));
                         items.push_back(newItem);
-                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.GetItemName() + "', " + to_string(newItem.GetWeight()) + ", " + to_string(newItem.GetVolume()) + ", 0, '" + GetImageBytes(imageField.label) + "');";
+                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.ItemName + "', " + to_string(newItem.Weight) + ", " + to_string(newItem.Volume) + ", 0, '" + GetImageBytes(imageField.label) + "');";
                         dataBase.Query(insertQuery);
                     }
                     nameField.Clear();
@@ -594,7 +594,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
 
     vector<BoxTile> boxTiles;
     for (size_t i = 0; i < boxes.size(); i++) {
-        boxTiles.push_back(BoxTile(250.f, 250.f, boxes[i].first.GetBoxID(), boxes[i].first.GetBoxName(), boxes[i].second, boxes[i].first.GetImage()));
+        boxTiles.push_back(BoxTile(250.f, 250.f, boxes[i].first.BoxID, boxes[i].first.BoxName, boxes[i].second, boxes[i].first.Image));
     }
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
     Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
@@ -692,7 +692,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
 string GetBoxesString(const vector<TBox>& boxes) {
     string ans = "Your new boxes:\nName\tMaxWeight\tMaxVolume\tCost";
     for (const TBox& box : boxes) {
-        ans += "\n" + box.GetBoxName() + "\t\t\t" + to_string(box.GetMaxWeight()) + "\t\t\t" + to_string(box.GetMaxVolume()) + "\t\t\t" + to_string(box.GetCost());
+        ans += "\n" + box.BoxName + "\t\t\t" + to_string(box.MaxWeight) + "\t\t\t" + to_string(box.MaxVolume) + "\t\t\t" + to_string(box.Cost);
     }
     return ans;
 }
@@ -754,7 +754,7 @@ void AdminCreateBox(sf::RenderWindow& window, TDataBase& dataBase) {
                     } else {
                         TBox newBox(0, nameField.label, ToInt(weightField.label), ToInt(volumeField.label), ToInt(costField.label));
                         boxes.push_back(newBox);
-                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.GetBoxName() + "', " + to_string(newBox.GetMaxWeight()) + ", " + to_string(newBox.GetMaxVolume()) + ", " + to_string(newBox.GetCost()) + ", 1, '" + GetImageBytes(imageField.label) + "');";
+                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.BoxName + "', " + to_string(newBox.MaxWeight) + ", " + to_string(newBox.MaxVolume) + ", " + to_string(newBox.Cost) + ", 1, '" + GetImageBytes(imageField.label) + "');";
                         dataBase.Query(insertQuery);
                     }
                     nameField.Clear();
@@ -853,12 +853,12 @@ vector<TOrder> GetOrders(TDataBase& dataBase) {
 
     map<uint64_t, TItem> items;
     for (const auto& [item, amount] : itemsVector) {
-        items[item.GetItemID()] = item;
+        items[item.ItemID] = item;
     }
 
     map<uint64_t, TBox> boxes;
     for (const auto& [box, amount] : boxesVector) {
-        boxes[box.GetBoxID()] = box;
+        boxes[box.BoxID] = box;
     }
 
     const string selectFilledBoxesQuery = "select * from FilledBox;";

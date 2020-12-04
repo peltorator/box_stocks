@@ -3,8 +3,8 @@
 
 TShop::TShop(const std::vector<std::pair<TItem, uint32_t>>& items, const std::vector<TBox>& boxes) {
     for (const auto& [item, amount] : items) {
-        Items[item.GetItemID()] = item;
-        AvailableAmounts[item.GetItemID()] = amount;
+        Items[item.ItemID] = item;
+        AvailableAmounts[item.ItemID] = amount;
     }
     Boxes = boxes;
 }
@@ -38,15 +38,15 @@ std::vector<TFilledBox> TShop::Buy() {
     for (uint64_t mask = 0; mask < DP_SIZE; mask++) {
         for (size_t bit = 0; bit < items.size(); bit++) {
             if ((mask >> bit) & 1) {
-                totalWeight[mask] += items[bit].GetWeight();
-                totalVolume[mask] += items[bit].GetVolume();
+                totalWeight[mask] += items[bit].Weight;
+                totalVolume[mask] += items[bit].Volume;
             }
         }
         for (uint64_t subMask = mask; subMask > 0; subMask = (subMask - 1) & mask) {
             for (size_t boxIndex = 0; boxIndex < Boxes.size(); boxIndex++) {
                 const TBox& box = Boxes[boxIndex];
-                if (totalWeight[subMask] <= box.GetMaxWeight() && totalVolume[subMask] <= box.GetMaxVolume() && minCost[mask ^ subMask] != INF_COST) {
-                    uint64_t newCost =  minCost[mask ^ subMask] + box.GetCost();
+                if (totalWeight[subMask] <= box.MaxWeight && totalVolume[subMask] <= box.MaxVolume && minCost[mask ^ subMask] != INF_COST) {
+                    uint64_t newCost =  minCost[mask ^ subMask] + box.Cost;
                     if (minCost[mask] > newCost) {
                         minCost[mask] = newCost;
                         lastBox[mask] = {subMask, boxIndex};

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "box.h"
-#include "item.h"
+#include "box.cpp"
+#include "item.cpp"
 #include <vector>
 #include <ostream>
 
@@ -12,19 +12,9 @@ struct TFilledBox {
 
     TFilledBox() = default;
 
-    const TBox& GetBox() const {
-        return Box;
-    }
-
-    const std::vector<TItem>& GetItems() const {
-        return Items;
-    }
-
     bool operator == (const TFilledBox& other) const {
-        return Box == other.GetBox() && Items == other.GetItems();
+        return Box == other.Box && Items == other.Items;
     }
-
-    friend std::ostream& operator << (std::ostream& out, TFilledBox filledBox);
 };
 
 std::ostream& operator << (std::ostream& out, TFilledBox filledBox) {
