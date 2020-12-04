@@ -67,22 +67,66 @@ string GetImageFromDB(const string &s) {
     return bytes;
 }
 
-pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(TDataBase& dataBase) {
+vector<pair<TItem, uint32_t>> GetItems(TDataBase& dataBase) {
     string getItemsQuery = "select * from Item;";
     vector<pair<TItem, uint32_t>> items;
     auto itemsRaw = dataBase.Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
         items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
     }
+    return items;
+}
 
+vector<TItem> GetItemsList(TDataBase& dataBase) {
+    string getItemsQuery = "select * from Item;";
+    vector<TItem> items;
+    auto itemsRaw = dataBase.Query(getItemsQuery);
+    for (auto& dict : itemsRaw) {
+        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])));
+    }
+    return items;
+}
+
+map<uint64_t, TItem> GetItemsMap(TDataBase& dataBase) {
+    map<uint64_t, TItem> itemsMap;
+    vector<TItem> items = GetItemsList(dataBase);
+    for (const TItem& item : items) {
+        itemsMap[item.ItemID] = item;
+    }
+    return itemsMap;
+}
+
+vector<pair<TBox, uint32_t>> GetBoxes(TDataBase& dataBase) {
+    
     string getBoxesQuery = "select * from Box;";
     vector<pair<TBox, uint32_t>> boxes;
     auto boxesRaw = dataBase.Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
         boxes.push_back({TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["available"])});
     }
+    return boxes;
+}
 
-    return {items, boxes};
+vector<TBox> GetAvailableBoxes(TDataBase& dataBase) {
+    
+    string getBoxesQuery = "select * from Box;";
+    vector<TBox> boxes;
+    auto boxesRaw = dataBase.Query(getBoxesQuery);
+    for (auto& dict : boxesRaw) {
+        if (ToInt(dict["available"])) {
+            boxes.push_back(TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])));
+        }
+    }
+    return boxes;
+}
+
+map<uint64_t, TBox> GetBoxesMap(TDataBase& dataBase) {
+    map<uint64_t, TBox> boxesMap;
+    const auto& boxes = GetBoxes(dataBase);
+    for (const auto& [box, available] : boxes) {
+        boxesMap[box.BoxID] = box;
+    }
+    return boxesMap;
 }
 
 void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, string title = "") {
@@ -250,13 +294,8 @@ void SaveOrder(const vector<TFilledBox>& filledBoxes, TDataBase& dataBase) {
 }
 
 void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(dataBase);
-    vector<TBox> availableBoxes;
-    for (const auto& box : boxes) {
-        if (box.second) {
-            availableBoxes.push_back(box.first);
-        }
-    }
+    vector<TBox> availableBoxes = GetAvailableBoxes(dataBase);
+    vector<pair<TItem, uint32_t>> items = GetItems(dataBase);
     TShop shop(items, availableBoxes);
 
     vector<ItemTile> itemTiles;
@@ -377,7 +416,7 @@ void UserMode(sf::RenderWindow& window, TDataBase& dataBase) {
 }
 
 void AdminAddDeleteItem(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(dataBase);
+    vector<pair<TItem, uint32_t>> items = GetItems(dataBase);
     vector<pair<TItem, int32_t>> newItems(items.size());
     for (size_t i = 0; i < items.size(); i++) {
         newItems[i] = {items[i].first, 0};
@@ -586,7 +625,7 @@ void AdminCreateItem(sf::RenderWindow& window, TDataBase& dataBase) {
 }
 
 void AdminAddDeleteBox(sf::RenderWindow& window, TDataBase& dataBase) {
-    auto [items, boxes] = GetSettings(dataBase);
+    vector<pair<TBox, uint32_t>> boxes = GetBoxes(dataBase);
     vector<pair<TBox, int32_t>> newBoxes(boxes.size());
     for (size_t i = 0; i < boxes.size(); i++) {
         newBoxes[i] = {boxes[i].first, 0};
@@ -849,17 +888,8 @@ vector<TOrder> GetOrders(TDataBase& dataBase) {
         orders[orderID] = TOrder(orderID, userID, userNames[userID], row["orderDate"]);
     }
 
-    const auto& [itemsVector, boxesVector] = GetSettings(dataBase);
-
-    map<uint64_t, TItem> items;
-    for (const auto& [item, amount] : itemsVector) {
-        items[item.ItemID] = item;
-    }
-
-    map<uint64_t, TBox> boxes;
-    for (const auto& [box, amount] : boxesVector) {
-        boxes[box.BoxID] = box;
-    }
+    map<uint64_t, TItem> items = GetItemsMap(dataBase);
+    map<uint64_t, TBox> boxes = GetBoxesMap(dataBase);
 
     const string selectFilledBoxesQuery = "select * from FilledBox;";
     auto FilledBoxesVector = dataBase.Query(selectFilledBoxesQuery);
@@ -893,13 +923,7 @@ void ShowHistory(sf::RenderWindow& window, TDataBase& dataBase) {
         orderButtons[i] = Button(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
     }
 
-    auto [items, boxes] = GetSettings(dataBase);
-    vector<TBox> availableBoxes;
-    for (auto [box, available] : boxes) {
-        if (available) {
-            availableBoxes.push_back(box);
-        }
-    }
+    vector<TBox> availableBoxes = GetAvailableBoxes(dataBase);
 
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
