@@ -1,5 +1,4 @@
-//#include "shop.h"
-#include "shop.cpp"
+#include "../ShopModel/shop.cpp"
 #include <string>
 #include <iostream>
 #include <fstream>

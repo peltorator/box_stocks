@@ -4,7 +4,7 @@
 #include <string>
 #include "font.cpp"
 
-struct TextField {
+struct TTextField {
     float X;
     float Y;
     float Dx;
@@ -13,9 +13,9 @@ struct TextField {
     std::string Label;
     bool NeedPop;
 
-    TextField() = default;
+    TTextField() = default;
 
-    TextField(const float x, const float y, const float dx, const float dy, const std::string& name)
+    TTextField(const float x, const float y, const float dx, const float dy, const std::string& name)
         : X(x)
         , Y(y)
         , Dx(dx)

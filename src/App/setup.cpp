@@ -3,8 +3,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include "database.cpp"
-#include "database_queries.cpp"
+#include "../DataBase/database.cpp"
+#include "../DataBase/database_queries.cpp"
 
 using namespace std;
 
@@ -40,14 +40,14 @@ void AddElems() {
             string imagePath;
             in >> itemName >> weight >> volume >> quantity >> imagePath;
             
-            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImageBytes("../images/" + imagePath) + "'),";
+            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImageBytes("../../images/" + imagePath) + "'),";
         } else if (type == "AddBox") {
             string boxName;
             uint64_t maxWeight, maxVolume, cost;
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../../images/" + imagePath) + "'),";
         }
     }
 

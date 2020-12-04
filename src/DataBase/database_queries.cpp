@@ -5,12 +5,12 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-#include "item.cpp"
-#include "box.cpp"
-#include "order.cpp"
-#include "filled_box.cpp"
+#include "../ShopModel/item.cpp"
+#include "../ShopModel/box.cpp"
+#include "../ShopModel/order.cpp"
+#include "../ShopModel/filled_box.cpp"
 #include "database.cpp"
-#include "helper_functions.cpp"
+#include "../helper_functions.cpp"
 
 std::string GetImageFromDB(const std::string &s) {
     std::string bytes;

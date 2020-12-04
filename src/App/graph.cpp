@@ -4,17 +4,17 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "shop.cpp"
-#include "order.cpp"
-#include "button.cpp"
-#include "text_field.cpp"
-#include "item_tile.cpp"
-#include "box_tile.cpp"
-#include "filled_box_tile.cpp"
-#include "database.cpp"
-#include "database_queries.cpp"
-#include "helper_functions.cpp"
-#include "font.cpp"
+#include "../ShopModel/shop.cpp"
+#include "../ShopModel/order.cpp"
+#include "../GraphicModel/button.cpp"
+#include "../GraphicModel/text_field.cpp"
+#include "../GraphicModel/item_tile.cpp"
+#include "../GraphicModel/box_tile.cpp"
+#include "../GraphicModel/filled_box_tile.cpp"
+#include "../GraphicModel/font.cpp"
+#include "../DataBase/database.cpp"
+#include "../DataBase/database_queries.cpp"
+#include "../helper_functions.cpp"
 
 using namespace std;
 
@@ -168,7 +168,7 @@ void UserMode(sf::RenderWindow& window) {
     TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
     TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
 
-    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+    TTextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
     size_t pageIndex = 0;
     const size_t rows = 2, columns = 5;
@@ -291,7 +291,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
     TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
     TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
     
-    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+    TTextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
     size_t pageIndex = 0;
     const size_t rows = 2, columns = 5;
@@ -391,10 +391,10 @@ string GetItemsString(const vector<TItem>& items) {
 void AdminCreateItem(sf::RenderWindow& window) {
     static TItem fakeItem(0, "already exists!", 0, 0);
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
-    TextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
-    TextField imageField(1000.f, 550.f, 100.f, 50.f, "Image Path");
+    TTextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
+    TTextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
+    TTextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
+    TTextField imageField(1000.f, 550.f, 100.f, 50.f, "Image Path");
     TButton addButton(1250.f, 550.f, 100.f, 50.f, "Add");
     string selected = "name";
     vector<TItem> items;
@@ -486,7 +486,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
     TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
     TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
     
-    TextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
+    TTextField searchField(550.f, 50.f, 300.f, 50.f, "Search");
 
     size_t pageIndex = 0;
     const size_t rows = 2, columns = 5;
@@ -586,11 +586,11 @@ string GetBoxesString(const vector<TBox>& boxes) {
 void AdminCreateBox(sf::RenderWindow& window) {
     static TBox fakeBox(0, "already exists!", 0, 0, 0);
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    TextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
-    TextField volumeField(500.f, 550.f, 100.f, 50.f, "MaxVolume");
-    TextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
-    TextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
+    TTextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
+    TTextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
+    TTextField volumeField(500.f, 550.f, 100.f, 50.f, "MaxVolume");
+    TTextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
+    TTextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
     TButton addButton(1100.f, 550.f, 100.f, 50.f, "Add");
     string selected = "name";
     vector<TBox> boxes;
