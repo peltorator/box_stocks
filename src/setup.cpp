@@ -19,7 +19,7 @@ string GetImage(string filename) {
     return ans;
 }
 
-void CreateTables(TDataBase dataBase) {
+void CreateTables() {
     string queryDropAndCreateTables = "drop table if exists Item;\n"
         "create table Item (itemID integer primary key, itemName text, weight integer, volume integer, amount integer, image text);\n"
         "drop table if exists Box;\n"
@@ -29,10 +29,10 @@ void CreateTables(TDataBase dataBase) {
         "create table if not exists FilledBox (filledBoxID integer primary key, boxID integer, orderID integer, foreign key(boxID) references Box(boxID), foreign key(orderID) references Orders(orderID));\n"
         "create table if not exists ItemsForFilledBox (itemsForFilledBoxID integer primary key, itemID integer, filledBoxID integer, foreign key(itemID) references Items(itemID), foreign key(filledBoxID) references Orders(filledBoxID));\n";
     
-    dataBase.Query(queryDropAndCreateTables);
+    NDataBase::Query(queryDropAndCreateTables);
 }
 
-void AddElems(TDataBase dataBase) {
+void AddElems() {
     string queryInsertItems = "insert into Item(itemName, weight, volume, amount, image) values";
     string queryInsertBoxes = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values";
 
@@ -65,18 +65,19 @@ void AddElems(TDataBase dataBase) {
     queryInsertItems.back() = ';';
     queryInsertBoxes.back() = ';';
 
-    dataBase.Query(queryInsertItems);
-    dataBase.Query(queryInsertBoxes);
+    NDataBase::Query(queryInsertItems);
+    NDataBase::Query(queryInsertBoxes);
 
     // string queryInsertUsers = "insert into Users(userID, userName) values (1, 'peltorator');";
-    // dataBase.Query(queryInsertUsers);
+    // NDataBase::Query(queryInsertUsers);
 }
 
 int main() {
-    TDataBase dataBase("db.sqlite");
+    NDataBase::Open("db.sqlite");
 
-    CreateTables(dataBase);
-    AddElems(dataBase);
-    dataBase.Close();
+    CreateTables();
+    AddElems();
+
+    NDataBase::Close();
     return 0;
 }
