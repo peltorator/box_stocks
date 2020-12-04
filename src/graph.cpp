@@ -238,12 +238,12 @@ void UserMode(sf::RenderWindow& window) {
         size_t curIndex = 0;
         for (size_t i = 0; i < itemTiles.size(); i++) {
             itemTiles[i].IsPresent = false;
-            if (!StartsWith(itemTiles[i].ItemName, searchField.Label)) {
+            if (itemTiles[i].MaxCnt == 0 || !StartsWith(itemTiles[i].ItemName, searchField.Label)) {
                 continue;
             }
             if (curIndex / pageSize == pageIndex) {
                 size_t innerIndex = curIndex % pageSize;
-                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 150.f + (innerIndex / columns) * 265.f);
                 itemTiles[i].IsPresent = true;
             }
             curIndex++;
@@ -361,7 +361,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
             }
             if (curIndex / pageSize == pageIndex) {
                 size_t innerIndex = curIndex % pageSize;
-                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                itemTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 150.f + (innerIndex / columns) * 265.f);
                 itemTiles[i].IsPresent = true;
             }
             curIndex++;
@@ -556,7 +556,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
             }
             if (curIndex / pageSize == pageIndex) {
                 size_t innerIndex = curIndex % pageSize;
-                boxTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 110.f + (innerIndex / columns) * 265.f);
+                boxTiles[i].SetPosition(50.f + (innerIndex % columns) * 265.f, 150.f + (innerIndex / columns) * 265.f);
                 boxTiles[i].IsPresent = true;
             }
             curIndex++;

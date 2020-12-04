@@ -38,9 +38,9 @@ struct TButton {
         text.setCharacterSize(18);
         text.setCharacterSize(std::min(1.0, Dx / text.getLocalBounds().width * 0.9) * 18.0);
         text.setFillColor(sf::Color::Black);
-        float cx = X + Dx * 0.5 - text.getLocalBounds().width * 0.5;
-        float cy = Y + Dy * 0.5 - text.getLocalBounds().height * 0.5;
-        text.setPosition(cx, cy);
+        sf::FloatRect textRect = text.getLocalBounds();
+        text.setOrigin(textRect.left + textRect.width / 2.0, textRect.top + textRect.height / 2.0);
+        text.setPosition(X + Dx * 0.5, Y + Dy * 0.5);
         
         window.draw(rectangle);
         window.draw(text);

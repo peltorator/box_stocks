@@ -64,7 +64,9 @@ struct TItemTile {
         nameText.setCharacterSize(18);
         nameText.setCharacterSize(std::min(1.0, Dx / nameText.getLocalBounds().width * 0.9) * 18.0);
         nameText.setFillColor(sf::Color::Black);
-        nameText.setPosition(X + 0.5 * Dx - 0.5 * nameText.getLocalBounds().width, Y + 0.54 * Dy);
+        sf::FloatRect nameTextRect = nameText.getLocalBounds();
+        nameText.setOrigin(nameTextRect.left + nameTextRect.width / 2.0, nameTextRect.top);
+        nameText.setPosition(X + 0.5 * Dx, Y + 0.54 * Dy);
 
         sf::Text cntText;
         cntText.setFont(NFont::font);
@@ -72,7 +74,9 @@ struct TItemTile {
         cntText.setCharacterSize(18);
         cntText.setCharacterSize(std::min(1.0, 0.25 * Dx / cntText.getLocalBounds().width) * 18.0);
         cntText.setFillColor(sf::Color::Black);
-        cntText.setPosition(X + 0.5 * Dx - 0.5 * cntText.getLocalBounds().width, Y + 0.8 * Dy - 0.5 * cntText.getLocalBounds().height);
+        sf::FloatRect cntTextRect = cntText.getLocalBounds();
+        cntText.setOrigin(cntTextRect.left + cntTextRect.width / 2.0, cntTextRect.top + cntTextRect.height / 2.0);
+        cntText.setPosition(X + 0.5 * Dx, Y + 0.8 * Dy);
 
         sf::Sprite pictureSprite;
         pictureSprite.setTexture(PictureTexture);

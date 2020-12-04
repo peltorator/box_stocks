@@ -56,7 +56,9 @@ struct TBoxTile {
         nameText.setCharacterSize(18);
         nameText.setCharacterSize(std::min(1.0, Dx / nameText.getLocalBounds().width * 0.9) * 18.0);
         nameText.setFillColor(sf::Color::Black);
-        nameText.setPosition(X + 0.5 * Dx - 0.5 * nameText.getLocalBounds().width, Y + 0.54 * Dy);
+        sf::FloatRect nameTextRect = nameText.getLocalBounds();
+        nameText.setOrigin(nameTextRect.left + nameTextRect.width / 2.0, nameTextRect.top);
+        nameText.setPosition(X + 0.5 * Dx, Y + 0.54 * Dy);
 
         sf::Sprite pictureSprite;
         pictureSprite.setTexture(PictureTexture);
