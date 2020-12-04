@@ -2,8 +2,6 @@
 #include <ctime>
 #include <string_view>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <SFML/Graphics.hpp>
 
 #include "shop.cpp"
@@ -14,6 +12,8 @@
 #include "box_tile.cpp"
 #include "filled_box_tile.cpp"
 #include "database.cpp"
+#include "database_queries.cpp"
+#include "helper_functions.cpp"
 #include "font.cpp"
 
 using namespace std;
@@ -26,107 +26,6 @@ void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50
     text.setFillColor(sf::Color::White);
     text.setPosition(px, py);
     window.draw(text);
-}
-
-uint64_t ToInt(const string& s) {
-    uint64_t ans = 0;
-    for (const char c : s) {
-        if (c >= '0' && c <= '9') {
-            ans = ans * 10LL + (c - '0');
-        } else {
-            return 0;
-        }
-    }
-    return ans;
-}
-
-void UpdateItems(sf::RenderWindow& window, const vector<pair<TItem, int32_t>>& items) {
-    for (const auto& [item, amount] : items) {
-        string updateQuery = "update Item set amount = amount + " + to_string(amount) + " where itemID = " + to_string(item.ItemID) + ";";
-        NDataBase::Query(updateQuery);
-    }
-}
-
-void UpdateBoxes(sf::RenderWindow& window, const vector<pair<TBox, int32_t>>& boxes) {
-    for (const auto& [box, amount] : boxes) {
-        string updateQuery = "update Box set available = available + " + to_string(amount) + " where boxID = " + to_string(box.BoxID) + ";";
-        NDataBase::Query(updateQuery);
-    }
-}
-
-string GetImageFromDB(const string &s) {
-    string bytes;
-    bytes.reserve(s.size() >> 3);
-    for (size_t i = 0; i < s.size(); i += 8) {
-        char c = 0;
-        for (int j = i; j < i + 8; j++) {
-            c = (c << 1) | (s[j] - '0');
-        }
-        bytes.push_back(c);
-    }
-    return bytes;
-}
-
-vector<pair<TItem, uint32_t>> GetItems() {
-    string getItemsQuery = "select * from Item;";
-    vector<pair<TItem, uint32_t>> items;
-    auto itemsRaw = NDataBase::Query(getItemsQuery);
-    for (auto& dict : itemsRaw) {
-        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
-    }
-    return items;
-}
-
-vector<TItem> GetItemsList() {
-    string getItemsQuery = "select * from Item;";
-    vector<TItem> items;
-    auto itemsRaw = NDataBase::Query(getItemsQuery);
-    for (auto& dict : itemsRaw) {
-        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])));
-    }
-    return items;
-}
-
-map<uint64_t, TItem> GetItemsMap() {
-    map<uint64_t, TItem> itemsMap;
-    vector<TItem> items = GetItemsList();
-    for (const TItem& item : items) {
-        itemsMap[item.ItemID] = item;
-    }
-    return itemsMap;
-}
-
-vector<pair<TBox, uint32_t>> GetBoxes() {
-    
-    string getBoxesQuery = "select * from Box;";
-    vector<pair<TBox, uint32_t>> boxes;
-    auto boxesRaw = NDataBase::Query(getBoxesQuery);
-    for (auto& dict : boxesRaw) {
-        boxes.push_back({TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["available"])});
-    }
-    return boxes;
-}
-
-vector<TBox> GetAvailableBoxes() {
-    
-    string getBoxesQuery = "select * from Box;";
-    vector<TBox> boxes;
-    auto boxesRaw = NDataBase::Query(getBoxesQuery);
-    for (auto& dict : boxesRaw) {
-        if (ToInt(dict["available"])) {
-            boxes.push_back(TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])));
-        }
-    }
-    return boxes;
-}
-
-map<uint64_t, TBox> GetBoxesMap() {
-    map<uint64_t, TBox> boxesMap;
-    const auto& boxes = GetBoxes();
-    for (const auto& [box, available] : boxes) {
-        boxesMap[box.BoxID] = box;
-    }
-    return boxesMap;
 }
 
 void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, string title = "") {
@@ -255,44 +154,6 @@ void DidntBuyAnything(sf::RenderWindow& window) {
     }
 }
 
-bool StartsWith(const string& str, const string& pref) {
-    if (pref.size() > str.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < pref.size(); i++) {
-        if (str[i] != pref[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-const string currentDate() {
-    time_t now = time(0);
-    struct tm tstruct;
-    char buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
-    return buf;
-}
-
-void SaveOrder(const vector<TFilledBox>& filledBoxes) {
-    const string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + currentDate() + "');";
-    NDataBase::Query(insertOrderQuery);
-    int64_t orderID = NDataBase::GetLastInsertID();
-    
-    for (const TFilledBox& filledBox : filledBoxes) {
-        const string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + to_string(filledBox.Box.BoxID) + ", " + to_string(orderID) + ");";
-        NDataBase::Query(insertFilledBoxQuery);
-        int64_t filledBoxID = NDataBase::GetLastInsertID();
-
-        for (const TItem& item : filledBox.Items) {
-            const string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + to_string(item.ItemID) + ", " + to_string(filledBoxID) + ");";
-            NDataBase::Query(insertItemsForFilledBoxQuery);
-        }
-    }
-}
-
 void UserMode(sf::RenderWindow& window) {
     vector<TBox> availableBoxes = GetAvailableBoxes();
     vector<pair<TItem, uint32_t>> items = GetItems();
@@ -410,7 +271,7 @@ void UserMode(sf::RenderWindow& window) {
             }
         }
         SaveOrder(filledBoxes);
-        UpdateItems(window, boughtItems);
+        UpdateItems(boughtItems);
         PrintBoxes(window, filledBoxes, availableBoxes);
     }
 }
@@ -516,26 +377,13 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         window.display();
     }
 
-    UpdateItems(window, newItems);
+    UpdateItems(newItems);
 }
 
 string GetItemsString(const vector<TItem>& items) {
     string ans = "Your new items:\nName\tWeight\tVolume";
     for (const TItem& item : items) {
         ans += "\n" + item.ItemName + "\t\t\t" + to_string(item.Weight) + "\t\t\t" + to_string(item.Volume);
-    }
-    return ans;
-}
-
-string GetImageBytes(const string &filename) {
-    ifstream file(filename, ios::binary);
-    string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    string ans;
-    ans.reserve(bytes.size() << 3);
-    for (size_t i = 0; i < bytes.size(); i++) {
-        for (int j = 7; j >= 0; j--) {
-            ans.push_back(((bytes[i] >> j) & 1) + '0');
-        }
     }
     return ans;
 }
@@ -592,8 +440,7 @@ void AdminCreateItem(sf::RenderWindow& window) {
                     } else {
                         TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label));
                         items.push_back(newItem);
-                        string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + newItem.ItemName + "', " + to_string(newItem.Weight) + ", " + to_string(newItem.Volume) + ", 0, '" + GetImageBytes(imageField.Label) + "');";
-                        NDataBase::Query(insertQuery);
+                        InsertItem(newItem, imageField.Label);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -725,7 +572,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
         window.display();
     }
 
-    UpdateBoxes(window, newBoxes);
+    UpdateBoxes(newBoxes);
 }
 
 string GetBoxesString(const vector<TBox>& boxes) {
@@ -786,15 +633,12 @@ void AdminCreateBox(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    string selectQuery = "select boxName from Box where boxName = '" + nameField.Label + "';";
-                    auto selectResponse = NDataBase::Query(selectQuery);
-                    if (!selectResponse.empty()) {
+                    if (CheckIfBoxExists(nameField.Label)) {
                         boxes.push_back(fakeBox);
                     } else {
                         TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
                         boxes.push_back(newBox);
-                        string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + newBox.BoxName + "', " + to_string(newBox.MaxWeight) + ", " + to_string(newBox.MaxVolume) + ", " + to_string(newBox.Cost) + ", 1, '" + GetImageBytes(imageField.Label) + "');";
-                        NDataBase::Query(insertQuery);
+                        InsertBox(newBox, imageField.Label);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -869,51 +713,6 @@ void AdminMode(sf::RenderWindow& window) {
         goBackButton.Draw(window);
         window.display();
     }
-}
-
-vector<TOrder> GetOrders() {
-    const string selectUsersQuery = "select * from Users;";
-    auto usersVector = NDataBase::Query(selectUsersQuery);
-    map<uint64_t, string> userNames;
-    for (auto& row : usersVector) {
-        userNames[ToInt(row["userID"])] = row["userName"];
-    }
-
-    const string selectOrdersQuery = "select * from Orders;";
-    auto ordersVector = NDataBase::Query(selectOrdersQuery);
-    map<uint64_t, TOrder> orders;
-    for (auto& row : ordersVector) {
-        const uint64_t orderID = ToInt(row["orderID"]);
-        const uint64_t userID = ToInt(row["userID"]);
-        orders[orderID] = TOrder(orderID, userID, userNames[userID], row["orderDate"]);
-    }
-
-    map<uint64_t, TItem> items = GetItemsMap();
-    map<uint64_t, TBox> boxes = GetBoxesMap();
-
-    const string selectFilledBoxesQuery = "select * from FilledBox;";
-    auto FilledBoxesVector = NDataBase::Query(selectFilledBoxesQuery);
-    map<uint64_t, pair<TFilledBox, uint64_t>> filledBoxes;
-    for (auto& row : FilledBoxesVector) {
-        filledBoxes[ToInt(row["filledBoxID"])] = {TFilledBox(boxes[ToInt(row["boxID"])]), ToInt(row["orderID"])};
-    }
-
-    const string selectItemsForFilledBoxQuery = "select * from ItemsForFilledBox;";
-    auto ItemsForFilledBoxVector = NDataBase::Query(selectItemsForFilledBoxQuery);
-    for (auto& row : ItemsForFilledBoxVector) {
-        filledBoxes[ToInt(row["filledBoxID"])].first.Items.push_back(items[ToInt(row["itemID"])]);
-    }
-
-    for (const auto& [id, filledBox] : filledBoxes) {
-        orders[filledBox.second].FilledBoxes.push_back(filledBox.first);
-    }
-
-    vector<TOrder> ans;
-    ans.reserve(orders.size());
-    for (const auto& order : orders) {
-        ans.push_back(order.second);
-    }
-    return ans;
 }
 
 void ShowHistory(sf::RenderWindow& window) {

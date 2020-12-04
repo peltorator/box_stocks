@@ -4,20 +4,9 @@
 #include <map>
 #include <algorithm>
 #include "database.cpp"
+#include "database_queries.cpp"
 
 using namespace std;
-
-string GetImage(string filename) {
-    ifstream file(filename, ios::binary);
-    string s((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    string ans = "";
-    for (size_t i = 0; i < s.size(); i++) {
-        for (int j = 7; j >= 0; j--) {
-            ans.push_back(((s[i] >> j) & 1) + '0');
-        }
-    }
-    return ans;
-}
 
 void CreateTables() {
     string queryDropAndCreateTables = "drop table if exists Item;\n"
@@ -51,14 +40,14 @@ void AddElems() {
             string imagePath;
             in >> itemName >> weight >> volume >> quantity >> imagePath;
             
-            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImage("../images/" + imagePath) + "'),";
+            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImageBytes("../images/" + imagePath) + "'),";
         } else if (type == "AddBox") {
             string boxName;
             uint64_t maxWeight, maxVolume, cost;
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImage("../images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../images/" + imagePath) + "'),";
         }
     }
 
