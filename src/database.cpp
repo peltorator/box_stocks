@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
-class TDataBase {
-public:
+namespace NDataBase {
+    sqlite3* db = nullptr;
+    std::vector<std::map<std::string, std::string>> values = {};
+
     static int callback(void *notUsed, int argc, char **argv, char **columnName) {
         std::map<std::string, std::string> curvals;
         for (int i = 0; i < argc; i++) {
@@ -14,15 +16,16 @@ public:
         values.push_back(curvals);
         return 0;
     }
-    TDataBase(const std::string path) {
+
+    void Close() {
+        sqlite3_close(db);
+    }
+
+    void Open(const std::string path) {
         if (sqlite3_open(path.c_str(), &db)) {
             std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
             Close();
         }
-    }
-
-    void Close() {
-        sqlite3_close(db);
     }
 
     std::vector<std::map<std::string, std::string>> Query(const std::string& query) {
@@ -38,10 +41,4 @@ public:
     int64_t GetLastInsertID() {
         return sqlite3_last_insert_rowid(db);
     }
-
-    static sqlite3* db;
-    static std::vector<std::map<std::string, std::string>> values;
 };
-
-sqlite3* TDataBase::db = nullptr;
-std::vector<std::map<std::string, std::string>> TDataBase::values = {};
