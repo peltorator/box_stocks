@@ -62,3 +62,9 @@ relative/path/to/dir/anotherfile
 *.exe
 *.out
 *.app
+
+
+*.sh
+*.sql
+*.sqlite
+*.DS_Store
