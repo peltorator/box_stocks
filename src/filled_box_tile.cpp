@@ -61,7 +61,7 @@ struct FilledBoxTile {
         float boxHeight = boxSprite.getLocalBounds().height;
         float boxWidth = boxSprite.getLocalBounds().width;
         float boxScale = std::min(0.4f * Dy / boxHeight, Dx / boxWidth);
-        boxSprite.setPosition(X + 0.5 * Dx - 0.5 * boxWidth * boxScale, Y + 30.f);
+        boxSprite.setPosition(X + 0.5 * Dx - 0.5 * boxWidth * boxScale, Y + 50.f);
         boxSprite.scale(boxScale, boxScale);
 
         window.draw(boxText);
@@ -77,18 +77,17 @@ struct FilledBoxTile {
             itemText.setCharacterSize(18);
             itemText.setCharacterSize(std::min(1.0, (Dx - 100.f) / itemText.getLocalBounds().width * 0.9) * 18.0);
             itemText.setFillColor(sf::Color::Black);
-            itemText.setPosition(X + 100.f, Y + 0.55 * Dy + i * 90.f);
-
+            itemText.setPosition(X + 85.f, Y + 0.55 * Dy + i * 90.f + 15.f);
             sf::Sprite itemSprite;
-            itemSprite.setTexture(itemTexture);
-            float itemHeight = itemSprite.getLocalBounds().height;
+            sf::CircleShape itemShape(30);
+            itemShape.setTexture(&itemTexture);
+            /*float itemHeight = itemSprite.getLocalBounds().height;
             float itemWidth = itemSprite.getLocalBounds().width;
-            float itemScale = std::min(80 / itemHeight, 80 / itemWidth);
-            itemSprite.setPosition(X + 10.f, Y + 0.55 * Dy + i * 90.f);
-            itemSprite.scale(itemScale, itemScale);
+            float itemScale = std::min(80 / itemHeight, 80 / itemWidth);*/
+            itemShape.setPosition(X + 10.f, Y + 0.55 * Dy + i * 90.f);
 
             window.draw(itemText);
-            window.draw(itemSprite);
+            window.draw(itemShape);
         }
     }
 };
