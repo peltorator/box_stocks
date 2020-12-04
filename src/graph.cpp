@@ -85,6 +85,81 @@ pair<vector<pair<TItem, uint32_t>>, vector<pair<TBox, uint32_t>>> GetSettings(TD
     return {items, boxes};
 }
 
+void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, string title = "") {
+    if (title.empty()) {
+        title = "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:";
+    }
+    vector<FilledBoxTile> filledBoxTiles;
+    for (size_t i = 0; i < filledBoxes.size(); i++) {
+        string curImage;
+        for (const auto& box : boxes) {
+            if (box.GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
+                curImage = box.GetImage();
+            }
+        }
+        filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].GetBox().GetBoxName(), curImage, filledBoxes[i].GetItems()));
+    }
+
+    Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
+    Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
+    Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+
+    size_t pageIndex = 0;
+    const size_t columns = 5;
+
+    bool quit = false;
+    while (window.isOpen() && !quit) {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            } else if (event.type == sf::Event::MouseButtonPressed) {
+                float px = event.mouseButton.x;
+                float py = event.mouseButton.y;
+
+                if (goBackButton.IsIn(px, py)) {
+                    return;
+                } else if (leftButton.IsIn(px, py)) {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                    }
+                } else if (rightButton.IsIn(px, py)) {
+                    if ((pageIndex + 1) * columns < filledBoxTiles.size()) {
+                        pageIndex++;
+                    }
+                }
+            }
+        }
+
+        window.clear();
+        AddTitle(window, title);
+        goBackButton.Draw(window);
+        if (pageIndex != 0) {
+            leftButton.Draw(window);
+        }
+        size_t curIndex = 0;
+        for (size_t i = 0; i < filledBoxTiles.size(); i++) {
+            filledBoxTiles[i].IsPresent = false;
+            if (curIndex / columns == pageIndex) {
+                size_t innerIndex = curIndex % columns;
+                filledBoxTiles[i].SetPosition(50.f + innerIndex * 265.f, 110.f);
+                filledBoxTiles[i].IsPresent = true;
+            }
+            curIndex++;
+        }
+        if ((pageIndex + 1) * columns < curIndex) {
+            rightButton.Draw(window);
+        }
+        for (FilledBoxTile& filledBoxTile : filledBoxTiles) {
+            if (filledBoxTile.IsPresent) {
+                filledBoxTile.Draw(window);
+            }
+        }
+        window.display();
+    }
+}
+
 void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
     if (filledBoxes.size() == 0) {
         Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -109,75 +184,7 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
             window.display();
         }
     } else {
-        vector<FilledBoxTile> filledBoxTiles;
-        for (size_t i = 0; i < filledBoxes.size(); i++) {
-            string curImage;
-            for (const auto& box : boxes) {
-                if (box.GetBoxID() == filledBoxes[i].GetBox().GetBoxID()) {
-                    curImage = box.GetImage();
-                }
-            }
-            filledBoxTiles.push_back(FilledBoxTile(250.f, 550.f, filledBoxes[i].GetBox().GetBoxName(), curImage, filledBoxes[i].GetItems()));
-        }
-
-        Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-        Button leftButton(25.f, 75.f, 25.f, 25.f, "<");
-        Button rightButton(1350.f, 75.f, 25.f, 25.f, ">");
-
-        size_t pageIndex = 0;
-        const size_t columns = 5;
-
-        bool quit = false;
-        while (window.isOpen() && !quit) {
-            sf::Event event;
-            while (window.pollEvent(event))
-            {
-                if (event.type == sf::Event::Closed) {
-                    window.close();
-                } else if (event.type == sf::Event::MouseButtonPressed) {
-                    float px = event.mouseButton.x;
-                    float py = event.mouseButton.y;
-
-                    if (goBackButton.IsIn(px, py)) {
-                        return;
-                    } else if (leftButton.IsIn(px, py)) {
-                        if (pageIndex > 0) {
-                            pageIndex--;
-                        }
-                    } else if (rightButton.IsIn(px, py)) {
-                        if ((pageIndex + 1) * columns < filledBoxTiles.size()) {
-                            pageIndex++;
-                        }
-                    }
-                }
-            }
-
-            window.clear();
-            AddTitle(window, "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:");
-            goBackButton.Draw(window);
-            if (pageIndex != 0) {
-                leftButton.Draw(window);
-            }
-            size_t curIndex = 0;
-            for (size_t i = 0; i < filledBoxTiles.size(); i++) {
-                filledBoxTiles[i].IsPresent = false;
-                if (curIndex / columns == pageIndex) {
-                    size_t innerIndex = curIndex % columns;
-                    filledBoxTiles[i].SetPosition(50.f + innerIndex * 265.f, 110.f);
-                    filledBoxTiles[i].IsPresent = true;
-                }
-                curIndex++;
-            }
-            if ((pageIndex + 1) * columns < curIndex) {
-                rightButton.Draw(window);
-            }
-            for (FilledBoxTile& filledBoxTile : filledBoxTiles) {
-                if (filledBoxTile.IsPresent) {
-                    filledBoxTile.Draw(window);
-                }
-            }
-            window.display();
-        }
+        ShowOrder(window, filledBoxes, boxes);
     }
 }
 
@@ -868,7 +875,6 @@ vector<TOrder> GetOrders(TDataBase& dataBase) {
     }
 
     for (const auto& [id, filledBox] : filledBoxes) {
-        assert(filledBox.second == 1);
         orders[filledBox.second].FilledBoxes.push_back(filledBox.first);
     }
 
@@ -880,15 +886,19 @@ vector<TOrder> GetOrders(TDataBase& dataBase) {
     return ans;
 }
 
-void ShowOrder(sf::RenderWindow& window, const TOrder& order) {
-    // TODO
-}
-
 void ShowHistory(sf::RenderWindow& window, TDataBase& dataBase) {
     vector<TOrder> orders = GetOrders(dataBase);
     vector<Button> orderButtons(orders.size());
     for (size_t i = 0; i < orders.size(); i++) {
         orderButtons[i] = Button(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
+    }
+
+    auto [items, boxes] = GetSettings(dataBase);
+    vector<TBox> availableBoxes;
+    for (auto [box, available] : boxes) {
+        if (available) {
+            availableBoxes.push_back(box);
+        }
     }
 
     Button goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -922,7 +932,7 @@ void ShowHistory(sf::RenderWindow& window, TDataBase& dataBase) {
                 } else {
                     for (size_t i = 0; i < orders.size(); i++) {
                         if (orderButtons[i].IsPresent && orderButtons[i].IsIn(px, py)) {
-                            ShowOrder(window, orders[i]);
+                            ShowOrder(window, orders[i].FilledBoxes, availableBoxes, orderButtons[i].label);
                             break;
                         }
                     }
