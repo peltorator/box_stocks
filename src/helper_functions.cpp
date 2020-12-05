@@ -14,7 +14,7 @@ bool StartsWith(const std::string& str, const std::string& pref) {
     return true;
 }
 
-const std::string currentDate() {
+const std::string CurrentDate() {
     time_t now = time(0);
     struct tm tstruct;
     char buf[80];

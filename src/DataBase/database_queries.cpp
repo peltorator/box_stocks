@@ -132,7 +132,7 @@ bool CheckIfBoxExists(const std::string& boxName) {
 }
 
 void SaveOrder(const std::vector<TFilledBox>& filledBoxes) {
-    const std::string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + currentDate() + "');";
+    const std::string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + CurrentDate() + "');";
     NDataBase::Query(insertOrderQuery);
     int64_t orderID = NDataBase::GetLastInsertID();
     
