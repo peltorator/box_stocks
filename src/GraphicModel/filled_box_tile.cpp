@@ -4,72 +4,91 @@
 #include <cmath>
 #include <SFML/Graphics.hpp>
 #include "font.cpp"
+#include "../ShopModel/item.cpp"
+#include "../ShopModel/box.cpp"
 
-    struct TFilledBoxTile {
-        float X;
-        float Y;
-        float Dx;
-        float Dy;
-        std::string BoxName;
-        sf::Texture BoxTexture;
-        std::vector<sf::Texture> ItemTextures;
-        std::vector<std::string> ItemNames;
-        bool IsPresent;
+struct TFilledBoxTile {
+    float X;
+    float Y;
+    float Dx;
+    float Dy;
+    std::string BoxName;
+    uint64_t BoxCost;
+    sf::Texture BoxTexture;
+    std::vector<sf::Texture> ItemTextures;
+    std::vector<std::string> ItemNames;
+    std::vector<uint64_t> ItemCosts;
+    uint64_t TotalItemsCost;
+    bool IsPresent;
 
-        TFilledBoxTile() = default;
+    TFilledBoxTile() = default;
 
-        TFilledBoxTile(const float dx, const float dy, const std::string &boxName, const std::string& boxImg, const std::vector<TItem>& items) {
-            X = 0;
-            Y = 0;
-            Dx = dx;
-            Dy = dy;
-            BoxName = boxName;
+    TFilledBoxTile(const float dx, const float dy, const TBox& box, const std::string& boxImg, const std::vector<TItem>& items) {
+        X = 0;
+        Y = 0;
+        Dx = dx;
+        Dy = dy;
 
-            BoxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
+        BoxName = box.BoxName;
+        BoxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
+        BoxCost = box.Cost;
 
-            ItemTextures.resize(items.size());
-            ItemNames.resize(items.size());
-            for (size_t i = 0; i < items.size(); i++) {
-                ItemTextures[i].loadFromMemory(items[i].Image.c_str(), items[i].Image.size());
-                ItemNames[i] = items[i].ItemName;
-            }
-
-            IsPresent = false;
+        ItemTextures.resize(items.size());
+        ItemNames.resize(items.size());
+        ItemCosts.resize(items.size());
+        TotalItemsCost = 0;
+        for (size_t i = 0; i < items.size(); i++) {
+            ItemTextures[i].loadFromMemory(items[i].Image.c_str(), items[i].Image.size());
+            ItemNames[i] = items[i].ItemName;
+            ItemCosts[i] = items[i].Cost;
+            TotalItemsCost += items[i].Cost;
         }
 
-        void SetPosition(float x, float y) {
-            X = x;
-            Y = y;
-        }
+        IsPresent = false;
+    }
 
-        void Draw(sf::RenderWindow& window) {
-            sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
-            rectangle.setPosition(X, Y);
-            rectangle.setFillColor(sf::Color::White);
-            window.draw(rectangle);
+    void SetPosition(float x, float y) {
+        X = x;
+        Y = y;
+    }
 
-            sf::Text boxText;
-            boxText.setFont(NFont::font);
-            boxText.setString(BoxName);
-            boxText.setCharacterSize(18);
-            boxText.setCharacterSize(std::min(1.0, Dx / boxText.getLocalBounds().width * 0.9) * 18.0);
-            boxText.setFillColor(sf::Color::Black);
-            sf::FloatRect boxTextRect = boxText.getLocalBounds();
-            boxText.setOrigin(boxTextRect.left + boxTextRect.width / 2.0, boxTextRect.top);
-            boxText.setPosition(X + 0.5 * Dx, Y + 5.f);
+    void Draw(sf::RenderWindow& window) {
+        sf::RectangleShape rectangle(sf::Vector2f(Dx, Dy));
+        rectangle.setPosition(X, Y);
+        rectangle.setFillColor(sf::Color::White);
+        window.draw(rectangle);
 
-            sf::Sprite boxSprite;
-            boxSprite.setTexture(BoxTexture);
-            float boxHeight = boxSprite.getLocalBounds().height;
-            float boxWidth = boxSprite.getLocalBounds().width;
-            float boxScale = std::min(0.4f * Dy / boxHeight, Dx / boxWidth);
-            boxSprite.setPosition(X + 0.5 * Dx - 0.5 * boxWidth * boxScale, Y + 50.f);
-            boxSprite.scale(boxScale, boxScale);
+        sf::Text boxText;
+        boxText.setFont(NFont::font);
+        boxText.setString(BoxName);
+        boxText.setCharacterSize(18);
+        boxText.setCharacterSize(std::min(1.0, Dx / boxText.getLocalBounds().width * 0.9) * 18.0);
+        boxText.setFillColor(sf::Color::Black);
+        sf::FloatRect boxTextRect = boxText.getLocalBounds();
+        boxText.setOrigin(boxTextRect.left + boxTextRect.width / 2.0, boxTextRect.top);
+        boxText.setPosition(X + 0.5 * Dx, Y + 5.f);
 
-            window.draw(boxText);
-            window.draw(boxSprite);
+        sf::Text totalCostText;
+        totalCostText.setFont(NFont::font);
+        totalCostText.setString("Total Cost: " + std::to_string(BoxCost + TotalItemsCost) + " Dollars");
+        totalCostText.setCharacterSize(18);
+        totalCostText.setFillColor(sf::Color::Black);
+        totalCostText.setPosition(X + 10.f, Y + 0.9 * Dy);
 
-            for (size_t i = 0; i < ItemNames.size(); i++) {
+        sf::Sprite boxSprite;
+        boxSprite.setTexture(BoxTexture);
+        float boxHeight = boxSprite.getLocalBounds().height;
+        float boxWidth = boxSprite.getLocalBounds().width;
+        float boxScale = std::min(0.4f * Dy / boxHeight, Dx / boxWidth);
+        boxSprite.setPosition(X + 0.5 * Dx - 0.5 * boxWidth * boxScale, Y + 50.f);
+        boxSprite.scale(boxScale, boxScale);
+
+        window.draw(boxText);
+        window.draw(totalCostText);
+        window.draw(boxSprite);
+
+        for (size_t i = 0; i < ItemNames.size(); i++) {
+            if (i <= 1) {
                 const std::string& itemName = ItemNames[i];
                 const sf::Texture& itemTexture = ItemTextures[i];
 
@@ -81,7 +100,16 @@
                 itemText.setFillColor(sf::Color::Black);
                 sf::FloatRect itemTextRect = itemText.getLocalBounds();
                 itemText.setOrigin(itemTextRect.left, itemTextRect.top + itemTextRect.height / 2.0);
-                itemText.setPosition(X + 85.f, Y + 0.55 * Dy + i * 90.f + 30.f);
+                itemText.setPosition(X + 85.f, Y + 0.55 * Dy + i * 90.f + 15.f);
+
+                sf::Text itemCostText;
+                itemCostText.setFont(NFont::font);
+                itemCostText.setString(std::to_string(ItemCosts[i]) + " Dollars");
+                itemCostText.setCharacterSize(18);
+                itemCostText.setFillColor(sf::Color::Black);
+                sf::FloatRect itemCostTextRect = itemCostText.getLocalBounds();
+                itemCostText.setOrigin(itemCostTextRect.left, itemCostTextRect.top + itemCostTextRect.height / 2.0);
+                itemCostText.setPosition(X + 85.f, Y + 0.55 * Dy + i * 90.f + 45.f);
 
                 sf::CircleShape itemShape(30);
                 itemShape.setTexture(&itemTexture);
@@ -92,8 +120,23 @@
                 itemShape.setPosition(X + 10.f, Y + 0.55 * Dy + i * 90.f);
 
                 window.draw(itemText);
+                window.draw(itemCostText);
                 window.draw(itemShape);
+            } else if (i == 2) {
+                sf::Text dotsText;
+                dotsText.setFont(NFont::font);
+                dotsText.setString("...");
+                dotsText.setCharacterSize(40);
+                dotsText.setFillColor(sf::Color::Black);
+                sf::FloatRect dotsTextRect = dotsText.getLocalBounds();
+                dotsText.setOrigin(dotsTextRect.left + dotsTextRect.width / 2.0, dotsTextRect.top + dotsTextRect.height / 2.0);
+                dotsText.setPosition(X + 0.5 * Dx, Y + 0.55 * Dy + i * 90.f);
+
+                window.draw(dotsText);
+            } else {
+                break;
             }
+        }
     }
 };
 

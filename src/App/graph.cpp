@@ -34,13 +34,17 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
     }
     vector<TFilledBoxTile> filledTBoxTiles;
     for (size_t i = 0; i < filledBoxes.size(); i++) {
-        string curImage;
+        std::string curImage;
         for (const auto& box : boxes) {
             if (box.BoxID == filledBoxes[i].Box.BoxID) {
                 curImage = box.Image;
             }
         }
-        filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].Box.BoxName, curImage, filledBoxes[i].Items));
+        filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].Box, curImage, filledBoxes[i].Items));
+    }
+    uint64_t orderTotalCost = 0;
+    for (const TFilledBox& filledBox : filledBoxes) {
+        orderTotalCost += filledBox.GetCost();
     }
 
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -99,6 +103,16 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
                 filledTBoxTile.Draw(window);
             }
         }
+
+        sf::Text totalCostText;
+        totalCostText.setFont(NFont::font);
+        totalCostText.setString("Order Cost: " + std::to_string(orderTotalCost) + " Dollars");
+        totalCostText.setCharacterSize(24);
+        totalCostText.setFillColor(sf::Color::White);
+        totalCostText.setPosition(200.f, 710.f);
+
+        window.draw(totalCostText);
+
         window.display();
     }
 }
@@ -161,7 +175,7 @@ void UserMode(sf::RenderWindow& window) {
 
     vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, true));
+        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first, items[i].second, true));
     }
     TButton finishButton(1200.f, 700.f, 100.f, 50.f, "Finish Order");
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -285,7 +299,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
 
     vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
-        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first.ItemID, items[i].first.ItemName, items[i].second, items[i].first.Image, false));
+        itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first, items[i].second, false));
     }
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Finish And Go Back");
     TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
@@ -383,18 +397,19 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
 string GetItemsString(const vector<TItem>& items) {
     string ans = "Your new items:\nName\tWeight\tVolume";
     for (const TItem& item : items) {
-        ans += "\n" + item.ItemName + "\t\t\t" + to_string(item.Weight) + "\t\t\t" + to_string(item.Volume);
+        ans += "\n" + item.ItemName + "\t\t\t" + to_string(item.Weight) + "\t\t\t" + to_string(item.Volume) + "\t\t\t" + to_string(item.Cost);
     }
     return ans;
 }
 
 void AdminCreateItem(sf::RenderWindow& window) {
-    static TItem fakeItem(0, "already exists!", 0, 0);
+    static TItem fakeItem(0, "already exists!", 0, 0, 0);
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TTextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TTextField weightField(400.f, 550.f, 100.f, 50.f, "Weight");
-    TTextField volumeField(700.f, 550.f, 100.f, 50.f, "Volume");
-    TTextField imageField(1000.f, 550.f, 100.f, 50.f, "Image Path");
+    TTextField weightField(330.f, 550.f, 100.f, 50.f, "Weight");
+    TTextField volumeField(560.f, 550.f, 100.f, 50.f, "Volume");
+    TTextField costField(790.f, 550.f, 100.f, 50.f, "Cost");
+    TTextField imageField(1020.f, 550.f, 100.f, 50.f, "Image Path");
     TButton addButton(1250.f, 550.f, 100.f, 50.f, "Add");
     string selected = "name";
     vector<TItem> items;
@@ -411,6 +426,8 @@ void AdminCreateItem(sf::RenderWindow& window) {
                     weightField.PopChar();
                 } else if (selected == "volume") {
                     volumeField.PopChar();
+                } else if (selected == "cost") {
+                    costField.PopChar();
                 } else if (selected == "image") {
                     imageField.PopChar();
                 }
@@ -423,6 +440,8 @@ void AdminCreateItem(sf::RenderWindow& window) {
                         weightField.AddChar(c);
                     } else if (selected == "volume") {
                         volumeField.AddChar(c);
+                    } else if (selected == "cost") {
+                        costField.PopChar();
                     } else if (selected == "image") {
                         imageField.AddChar(c);
                     }
@@ -438,7 +457,7 @@ void AdminCreateItem(sf::RenderWindow& window) {
                     if (!selectResponse.empty()) {
                         items.push_back(fakeItem);
                     } else {
-                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label));
+                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
                         items.push_back(newItem);
                         InsertItem(newItem, imageField.Label);
                     }
@@ -452,6 +471,8 @@ void AdminCreateItem(sf::RenderWindow& window) {
                     selected = "weight";
                 } else if (volumeField.IsIn(px, py)) {
                     selected = "volume";
+                } else if (costField.IsIn(px, py)) {
+                    selected = "cost";
                 } else if (imageField.IsIn(px, py)) {
                     selected = "image";
                 }
@@ -466,6 +487,7 @@ void AdminCreateItem(sf::RenderWindow& window) {
         nameField.Draw(window);
         weightField.Draw(window);
         volumeField.Draw(window);
+        costField.Draw(window);
         imageField.Draw(window);
         window.display();
     }

@@ -53,7 +53,7 @@ void UpdateBoxes(const std::vector<std::pair<TBox, int32_t>>& boxes) {
 }
 
 void InsertItem(const TItem& item, const std::string& imagePath) {
-    std::string insertQuery = "insert into Item(itemName, weight, volume, amount, image) values ('" + item.ItemName + "', " + std::to_string(item.Weight) + ", " + std::to_string(item.Volume) + ", 0, '" + GetImageBytes(imagePath) + "');";
+    std::string insertQuery = "insert into Item(itemName, weight, volume, cost, amount, image) values ('" + item.ItemName + "', " + std::to_string(item.Weight) + ", " + std::to_string(item.Volume) + ", " + std::to_string(item.Cost) + ", 0, '" + GetImageBytes(imagePath) + "');";
     NDataBase::Query(insertQuery);
 }
 
@@ -67,7 +67,7 @@ std::vector<std::pair<TItem, uint32_t>> GetItems() {
     std::vector<std::pair<TItem, uint32_t>> items;
     auto itemsRaw = NDataBase::Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
+        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
     }
     return items;
 }
@@ -77,7 +77,7 @@ std::vector<TItem> GetItemsList() {
     std::vector<TItem> items;
     auto itemsRaw = NDataBase::Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), GetImageFromDB(dict["image"])));
+        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])));
     }
     return items;
 }

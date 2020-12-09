@@ -18,4 +18,12 @@ struct TOrder {
         , UserName(userName)
         , OrderDate(orderDate)
         , FilledBoxes(filledBoxes) {}
+
+    uint64_t GetCost() const {
+        uint64_t cost = 0;
+        for (const TFilledBox& filledBox : FilledBoxes) {
+            cost += filledBox.GetCost();
+        }
+        return cost;
+    }
 };

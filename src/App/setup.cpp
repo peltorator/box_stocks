@@ -10,7 +10,7 @@ using namespace std;
 
 void CreateTables() {
     string queryDropAndCreateTables = "drop table if exists Item;\n"
-        "create table Item (itemID integer primary key, itemName text, weight integer, volume integer, amount integer, image text);\n"
+        "create table Item (itemID integer primary key, itemName text, weight integer, volume integer, cost integer, amount integer, image text);\n"
         "drop table if exists Box;\n"
         "create table Box (boxID integer primary key, boxName text, maxWeight integer, maxVolume integer, cost integer, available integer, image text);\n"
         "create table if not exists Users (userID integer primary key, userName text);\n"
@@ -22,7 +22,7 @@ void CreateTables() {
 }
 
 void AddElems() {
-    string queryInsertItems = "insert into Item(itemName, weight, volume, amount, image) values";
+    string queryInsertItems = "insert into Item(itemName, weight, volume, cost, amount, image) values";
     string queryInsertBoxes = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values";
 
     ifstream in("setup.txt");
@@ -35,19 +35,19 @@ void AddElems() {
         }
         if (type == "AddItem") {
             string itemName;
-            uint64_t weight, volume;
+            uint64_t weight, volume, cost;
             uint32_t quantity;
             string imagePath;
-            in >> itemName >> weight >> volume >> quantity >> imagePath;
+            in >> itemName >> weight >> volume >> cost >> quantity >> imagePath;
             
-            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(quantity) + ", '" + GetImageBytes("../../images/" + imagePath) + "'),";
+            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(cost) + ", " + to_string(quantity) + ", '" + GetImageBytes("../../assets/images/" + imagePath) + "'),";
         } else if (type == "AddBox") {
             string boxName;
             uint64_t maxWeight, maxVolume, cost;
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../../images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../../assets/images/" + imagePath) + "'),";
         }
     }
 

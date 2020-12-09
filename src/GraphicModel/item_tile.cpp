@@ -3,6 +3,7 @@
 #include <string>
 #include <cmath>
 #include "button.cpp"
+#include "../ShopModel/item.cpp"
 #include "font.cpp"
 
 struct TItemTile {
@@ -12,6 +13,7 @@ struct TItemTile {
     float Dy;
     uint64_t ItemID;
     std::string ItemName;
+    uint64_t Cost;
     uint32_t CurCnt;
     uint32_t MaxCnt;
     bool ShowCnt;
@@ -22,20 +24,21 @@ struct TItemTile {
 
     TItemTile() = default;
 
-    TItemTile(const float dx, const float dy, const uint64_t itemID, const std::string& itemName, const uint32_t maxCnt, const std::string& img, const bool showCnt) {
+    TItemTile(const float dx, const float dy, const TItem& item, const uint32_t maxCnt, const bool showCnt) {
         X = 0;
         Y = 0;
         Dx = dx;
         Dy = dy;
-        ItemID = itemID;
-        ItemName = itemName;
+        ItemID = item.ItemID;
+        ItemName = item.ItemName;
+        Cost = item.Cost;
         CurCnt = 0;
         MaxCnt = maxCnt;
         ShowCnt = showCnt;
         MinusButton = TButton(0, 0, 0.25 * Dx, 0.2 * Dy, "-");
         PlusButton = TButton(0, 0, 0.25 * Dx, 0.2 * Dy, "+");
 
-        PictureTexture.loadFromMemory(img.c_str(), img.size());
+        PictureTexture.loadFromMemory(item.Image.c_str(), item.Image.size());
 
         IsPresent = false;
     }
@@ -78,6 +81,15 @@ struct TItemTile {
         cntText.setOrigin(cntTextRect.left + cntTextRect.width / 2.0, cntTextRect.top + cntTextRect.height / 2.0);
         cntText.setPosition(X + 0.5 * Dx, Y + 0.8 * Dy);
 
+        sf::Text costText;
+        costText.setFont(NFont::font);
+        costText.setString(std::to_string(Cost) + " Dollars");
+        costText.setCharacterSize(18);
+        costText.setFillColor(sf::Color::Black);
+        sf::FloatRect costTextRect = costText.getLocalBounds();
+        costText.setOrigin(costTextRect.left + costTextRect.width / 2.0, costTextRect.top);
+        costText.setPosition(X + 0.5 * Dx, Y + 0.5 * Dy + 35.f);
+
         sf::Sprite pictureSprite;
         pictureSprite.setTexture(PictureTexture);
         float pictureHeight = pictureSprite.getLocalBounds().height;
@@ -88,6 +100,7 @@ struct TItemTile {
         
         window.draw(rectangle);
         window.draw(nameText);
+        window.draw(costText);
         window.draw(cntText);
         window.draw(pictureSprite);
         MinusButton.Draw(window);

@@ -15,6 +15,14 @@ struct TFilledBox {
     bool operator == (const TFilledBox& other) const {
         return Box == other.Box && Items == other.Items;
     }
+
+    uint64_t GetCost() const {
+        uint64_t itemsCost = 0;
+        for (const TItem& item : Items) {
+            itemsCost += item.Cost;
+        }
+        return itemsCost + Box.Cost;
+    }
 };
 
 std::ostream& operator << (std::ostream& out, TFilledBox filledBox) {
