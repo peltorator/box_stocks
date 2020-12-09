@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "../../catch2/catch.hpp"
+#include "../../libs/catch2/catch.hpp"
 #include "../database.cpp"
 
 using namespace std;

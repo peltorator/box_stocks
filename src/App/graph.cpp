@@ -14,7 +14,7 @@
 #include "../GraphicModel/font.cpp"
 #include "../DataBase/database.cpp"
 #include "../DataBase/database_queries.cpp"
-#include "../helper_functions.cpp"
+#include "../Helper/helper_functions.cpp"
 
 using namespace std;
 

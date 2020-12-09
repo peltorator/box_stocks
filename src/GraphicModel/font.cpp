@@ -5,6 +5,6 @@ namespace NFont {
     sf::Font font;
 
     void GetFont() {
-        font.loadFromFile("../arial.ttf");
+        font.loadFromFile("../../assets/fonts/arial.ttf");
     }
 };

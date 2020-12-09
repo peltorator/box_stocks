@@ -10,7 +10,7 @@
 #include "../ShopModel/order.cpp"
 #include "../ShopModel/filled_box.cpp"
 #include "database.cpp"
-#include "../helper_functions.cpp"
+#include "../Helper/helper_functions.cpp"
 
 std::string GetImageFromDB(const std::string &s) {
     std::string bytes;
