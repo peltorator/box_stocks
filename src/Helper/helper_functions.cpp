@@ -25,12 +25,19 @@ const std::string CurrentDate() {
 
 uint64_t ToInt(const std::string& s) {
     uint64_t ans = 0;
-    for (const char c : s) {
+    bool negate = false;
+    for (size_t i = 0; i < s.size(); i++) {
+        char c = s[i];
         if (c >= '0' && c <= '9') {
             ans = ans * 10LL + (c - '0');
+        } else if (i == 0 && c == '-') {
+            negate = true;
         } else {
             return 0;
         }
+    }
+    if (negate) {
+        ans = -ans;
     }
     return ans;
 }
