@@ -447,7 +447,7 @@ void AdminCreateItem(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    if (NHttp::CheckIfItemExists(nameField.Label)) {
+                    if (NDataProvider::CheckIfItemExists(nameField.Label)) {
                         items.push_back(fakeItem);
                     } else {
                         TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
@@ -648,7 +648,7 @@ void AdminCreateBox(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    if (NHttp::CheckIfBoxExists(nameField.Label)) {
+                    if (NDataProvider::CheckIfBoxExists(nameField.Label)) {
                         boxes.push_back(fakeBox);
                     } else {
                         TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
