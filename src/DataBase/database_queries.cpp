@@ -12,53 +12,23 @@
 #include "database.cpp"
 #include "../Helper/helper_functions.cpp"
 
-std::string GetImageFromDB(const std::string &s) {
-    std::string bytes;
-    bytes.reserve(s.size() >> 3);
-    for (size_t i = 0; i < s.size(); i += 8) {
-        char c = 0;
-        for (int j = i; j < i + 8; j++) {
-            c = (c << 1) | (s[j] - '0');
-        }
-        bytes.push_back(c);
-    }
-    return bytes;
+void UpdateItem(const uint64_t itemID, const int32_t amount) {
+    std::string updateQuery = "update Item set amount = amount + " + std::to_string(amount) + " where itemID = " + std::to_string(itemID) + ";";
+    NDataBase::Query(updateQuery);
 }
 
-std::string GetImageBytes(const std::string &filename) {
-    std::ifstream file(filename, std::ios::binary);
-    std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string ans;
-    ans.reserve(bytes.size() << 3);
-    for (size_t i = 0; i < bytes.size(); i++) {
-        for (int j = 7; j >= 0; j--) {
-            ans.push_back(((bytes[i] >> j) & 1) + '0');
-        }
-    }
-    return ans;
+void UpdateBox(const uint64_t boxID, const int32_t amount) {
+    std::string updateQuery = "update Box set available = available + " + std::to_string(amount) + " where boxID = " + std::to_string(boxID) + ";";
+    NDataBase::Query(updateQuery);
 }
 
-void UpdateItems(const std::vector<std::pair<TItem, int32_t>>& items) {
-    for (const auto& [item, amount] : items) {
-        std::string updateQuery = "update Item set amount = amount + " + std::to_string(amount) + " where itemID = " + std::to_string(item.ItemID) + ";";
-        NDataBase::Query(updateQuery);
-    }
-}
-
-void UpdateBoxes(const std::vector<std::pair<TBox, int32_t>>& boxes) {
-    for (const auto& [box, amount] : boxes) {
-        std::string updateQuery = "update Box set available = available + " + std::to_string(amount) + " where boxID = " + std::to_string(box.BoxID) + ";";
-        NDataBase::Query(updateQuery);
-    }
-}
-
-void InsertItem(const TItem& item, const std::string& imagePath) {
-    std::string insertQuery = "insert into Item(itemName, weight, volume, cost, amount, image) values ('" + item.ItemName + "', " + std::to_string(item.Weight) + ", " + std::to_string(item.Volume) + ", " + std::to_string(item.Cost) + ", 0, '" + GetImageBytes(imagePath) + "');";
+void InsertItem(const std::string itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const std::string& image) {
+    std::string insertQuery = "insert into Item(itemName, weight, volume, cost, amount, image) values ('" + itemName + "', " + std::to_string(weight) + ", " + std::to_string(volume) + ", " + std::to_string(cost) + ", 0, '" + image + "');";
     NDataBase::Query(insertQuery);
 }
 
-void InsertBox(const TBox& box, const std::string& imagePath) {
-    std::string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, image) values ('" + box.BoxName + "', " + std::to_string(box.MaxWeight) + ", " + std::to_string(box.MaxVolume) + ", " + std::to_string(box.Cost) + ", 1, '" + GetImageBytes(imagePath) + "');";
+void InsertBox(const std::string boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& image) {
+    std::string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values ('" + boxName + "', " + std::to_string(maxWeight) + ", " + std::to_string(maxVolume) + ", " + std::to_string(cost) + ", 1, '" + image + "');";
     NDataBase::Query(insertQuery);
 }
 
@@ -67,7 +37,7 @@ std::vector<std::pair<TItem, uint32_t>> GetItems() {
     std::vector<std::pair<TItem, uint32_t>> items;
     auto itemsRaw = NDataBase::Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["amount"])});
+        items.push_back({TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), dict["image"]), ToInt(dict["amount"])});
     }
     return items;
 }
@@ -77,7 +47,7 @@ std::vector<TItem> GetItemsList() {
     std::vector<TItem> items;
     auto itemsRaw = NDataBase::Query(getItemsQuery);
     for (auto& dict : itemsRaw) {
-        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])));
+        items.push_back(TItem(ToInt(dict["itemID"]), dict["itemName"], ToInt(dict["weight"]), ToInt(dict["volume"]), ToInt(dict["cost"]), dict["image"]));
     }
     return items;
 }
@@ -97,7 +67,7 @@ std::vector<std::pair<TBox, uint32_t>> GetBoxes() {
     std::vector<std::pair<TBox, uint32_t>> boxes;
     auto boxesRaw = NDataBase::Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
-        boxes.push_back({TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])), ToInt(dict["available"])});
+        boxes.push_back({TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), dict["image"]), ToInt(dict["available"])});
     }
     return boxes;
 }
@@ -109,7 +79,7 @@ std::vector<TBox> GetAvailableBoxes() {
     auto boxesRaw = NDataBase::Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
         if (ToInt(dict["available"])) {
-            boxes.push_back(TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), GetImageFromDB(dict["image"])));
+            boxes.push_back(TBox(ToInt(dict["boxID"]), dict["boxName"], ToInt(dict["maxWeight"]), ToInt(dict["maxVolume"]), ToInt(dict["cost"]), dict["image"]));
         }
     }
     return boxes;
@@ -124,25 +94,18 @@ std::map<uint64_t, TBox> GetBoxesMap() {
     return boxesMap;
 }
 
-bool CheckIfBoxExists(const std::string& boxName) {
-    std::string selectQuery = "select boxName from Box where boxName = '" + boxName + "';";
-    auto selectResponse = NDataBase::Query(selectQuery);
-    return !selectResponse.empty();
-
-}
-
-void SaveOrder(const std::vector<TFilledBox>& filledBoxes) {
+void SaveOrder(const std::vector<std::pair<uint64_t, std::vector<uint64_t>>>& filledBoxes) {
     const std::string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + CurrentDate() + "');";
     NDataBase::Query(insertOrderQuery);
     int64_t orderID = NDataBase::GetLastInsertID();
     
-    for (const TFilledBox& filledBox : filledBoxes) {
-        const std::string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + std::to_string(filledBox.Box.BoxID) + ", " + std::to_string(orderID) + ");";
+    for (const auto& [boxID, itemIDs] : filledBoxes) {
+        const std::string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + std::to_string(boxID) + ", " + std::to_string(orderID) + ");";
         NDataBase::Query(insertFilledBoxQuery);
         int64_t filledBoxID = NDataBase::GetLastInsertID();
 
-        for (const TItem& item : filledBox.Items) {
-            const std::string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + std::to_string(item.ItemID) + ", " + std::to_string(filledBoxID) + ");";
+        for (const uint64_t& itemID : itemIDs) {
+            const std::string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + std::to_string(itemID) + ", " + std::to_string(filledBoxID) + ");";
             NDataBase::Query(insertItemsForFilledBoxQuery);
         }
     }
@@ -192,7 +155,7 @@ std::vector<TOrder> GetOrders() {
     const std::string selectItemsForFilledBoxQuery = "select * from ItemsForFilledBox;";
     auto ItemsForFilledBoxVector = NDataBase::Query(selectItemsForFilledBoxQuery);
     for (auto& row : ItemsForFilledBoxVector) {
-        filledBoxes[ToInt(row["filledBoxID"])].first.Items.push_back(items[ToInt(row["itemID"])]);
+        filledBoxes[ToInt(row["filledBoxID"])].first.ItemIDs.push_back(ToInt(row["itemID"]));
     }
 
     for (const auto& [id, filledBox] : filledBoxes) {
