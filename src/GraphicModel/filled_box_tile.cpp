@@ -42,8 +42,6 @@ struct TFilledBoxTile {
         ItemCosts.resize(itemIDs.size());
         TotalItemsCost = 0;
         for (size_t i = 0; i < itemIDs.size(); i++) {
-            std::cout << itemIDs[i] << std::endl;
-            assert(NDataProvider::IdToItem.count(itemIDs[i]));
             const TItem& item = NDataProvider::IdToItem[itemIDs[i]];
             ItemTextures[i].loadFromMemory(item.Image.c_str(), item.Image.size());
             ItemNames[i] = item.ItemName;
