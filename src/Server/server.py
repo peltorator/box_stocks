@@ -15,8 +15,8 @@ libc.DeleteItemFromShop.argtypes = [c_void_p, c_ulonglong]
 libc.ShopOrderIsEmpty.argtypes = [c_void_p]
 libc.ShopOrderIsEmpty.restype = c_int
 
-libc.BuyOrderToJson.argtypes = [c_void_p]
-libc.BuyOrderToJson.restype = c_char_p
+libc.BuyOrderToString.argtypes = [c_void_p]
+libc.BuyOrderToString.restype = c_char_p
 
 libc.DBUpdateItem.argtypes = [c_ulonglong, c_int]
 
@@ -72,7 +72,7 @@ class HandleRequests(BaseHTTPRequestHandler):
             orderIsEmpty = libc.ShopOrderIsEmpty(shop)
             content = str(orderIsEmpty)
         elif qtype == 'buy':
-            content = libc.BuyOrderToJson(shop).decode('utf-8')
+            content = libc.BuyOrderToString(shop).decode('utf-8')
             libc.DeleteShop(shop)
             shop = libc.MakeShop()
         elif qtype == 'update_item':
@@ -89,27 +89,23 @@ class HandleRequests(BaseHTTPRequestHandler):
             volume = int(args[3])
             cost = int(args[4])
             image = args[5]
-            libc.DBInsertItem(itemName, weight, volume, cost, image)
+            libc.DBInsertItem(itemName.encode('utf-8'), weight, volume, cost, image.encode('utf-8'))
         elif qtype == 'insert_box':
             boxName = args[1]
             maxWeight = int(args[2])
             maxVolume = int(args[3])
             cost = int(args[4])
             image = args[5]
-            libc.DBInsertBox(boxName, maxWeight, maxVolume, cost, image)
+            libc.DBInsertBox(boxName.encode('utf-8'), maxWeight, maxVolume, cost, image.encode('utf-8'))
         elif qtype == 'get_items':
             print(libc.DBGetItems())
             content = libc.DBGetItems().decode('utf-8')
         elif qtype == 'get_boxes':
             content = libc.DBGetBoxes().decode('utf-8')
         elif qtype == 'save_order':
-            raise NotImplementedError
+            libc.DBSaveOrder(path.encode('utf-8'))
         elif qtype == 'get_orders':
             content = libc.DBGetOrders().decode('utf-8')
-        elif qtype == 'item_exists':
-            raise NotImplementedError
-        elif qtype == 'box_exists':
-            raise NotImplementedError
         else:
             content = 'undefined query'
         #print('Response content: ', content)
