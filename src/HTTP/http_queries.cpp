@@ -108,7 +108,8 @@ namespace NHttp {
             body >> boxID;
             int itemsSize;
             body >> itemsSize;
-            std::vector<uint64_t> itemIDs(itemsSize);
+            std::vector<uint64_t> itemIDs;
+            itemIDs.reserve(itemsSize);
             for (int j = 0; j < itemsSize; j++) {
                 uint64_t itemID;
                 body >> itemID;
@@ -120,7 +121,15 @@ namespace NHttp {
     }
 
     void SaveOrder(const std::vector<TFilledBox>& order) {
-        // TODO
+        std::stringstream path;
+        path << "/save_order/" << order.size();
+        for (const TFilledBox& filledBox : order) {
+            path << "/" << filledBox.BoxID << "/" << filledBox.ItemIDs.size();
+            for (const uint64_t& itemID : filledBox.ItemIDs) {
+                path << "/" << itemID;
+            }
+        }
+        auto res = cli.Get(path.str().c_str());
     }
 
     void UpdateItems(const std::vector<std::pair<uint64_t, int32_t>>& items) {
@@ -162,7 +171,8 @@ namespace NHttp {
                 body >> boxID;
                 int itemsSize;
                 body >> itemsSize;
-                std::vector<uint64_t> itemIDs(itemsSize);
+                std::vector<uint64_t> itemIDs;
+                itemIDs.reserve(itemsSize);
                 for (int k = 0; k < itemsSize; k++) {
                     uint64_t itemID;
                     body >> itemID;
@@ -173,21 +183,5 @@ namespace NHttp {
             orders.emplace_back(orderID, userID, userName, orderDate, filledBoxes);
         }
         return orders;
-    }
-
-    bool CheckIfItemExists(const std::string& itemName) {
-        auto res = cli.Get(("/item_exists/" + itemName).c_str());
-        std::stringstream body(res->body);
-        int ans;
-        body >> ans;
-        return static_cast<bool>(ans);
-    }
-
-    bool CheckIfBoxExists(const std::string& boxName) {
-        auto res = cli.Get(("/box_exists/" + boxName).c_str());
-        std::stringstream body(res->body);
-        int ans;
-        body >> ans;
-        return static_cast<bool>(ans);
     }
 }
