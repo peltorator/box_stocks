@@ -4,7 +4,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "../ShopModel/shop.cpp"
 #include "../ShopModel/order.cpp"
 #include "../GraphicModel/button.cpp"
 #include "../GraphicModel/text_field.cpp"
@@ -12,13 +11,12 @@
 #include "../GraphicModel/box_tile.cpp"
 #include "../GraphicModel/filled_box_tile.cpp"
 #include "../GraphicModel/font.cpp"
-#include "../DataBase/database.cpp"
-#include "../DataBase/database_queries.cpp"
 #include "../Helper/helper_functions.cpp"
+#include "../HTTP/http_queries.cpp"
+#include "../DataProvider/data_provider.cpp"
 
-using namespace std;
 
-void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
+void AddTitle(sf::RenderWindow& window, const std::string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
     sf::Text text;
     text.setFont(NFont::font);
     text.setString(title);
@@ -28,23 +26,21 @@ void AddTitle(sf::RenderWindow& window, const string& title, const float px = 50
     window.draw(text);
 }
 
-void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes, string title = "") {
+void ShowOrder(sf::RenderWindow& window, const std::vector<TFilledBox>& filledBoxes, std::string title = "") {
     if (title.empty()) {
         title = "You finished your purchase successfully. Thank you for using our shop. Your order will come to you in the following form:";
     }
-    vector<TFilledBoxTile> filledTBoxTiles;
+    std::vector<TFilledBoxTile> filledTBoxTiles;
     for (size_t i = 0; i < filledBoxes.size(); i++) {
-        std::string curImage;
-        for (const auto& box : boxes) {
-            if (box.BoxID == filledBoxes[i].Box.BoxID) {
-                curImage = box.Image;
-            }
-        }
-        filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].Box, curImage, filledBoxes[i].Items));
+        std::string curImage = NDataProvider::IdToBox[filledBoxes[i].BoxID].Image;
+        filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].BoxID, curImage, filledBoxes[i].ItemIDs));
     }
     uint64_t orderTotalCost = 0;
     for (const TFilledBox& filledBox : filledBoxes) {
-        orderTotalCost += filledBox.GetCost();
+        orderTotalCost += NDataProvider::IdToBox[filledBox.BoxID].Cost;
+        for (const uint64_t &itemID : filledBox.ItemIDs) {
+            orderTotalCost += NDataProvider::IdToItem[itemID].Cost;
+        }
     }
 
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
@@ -117,7 +113,7 @@ void ShowOrder(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, 
     }
 }
 
-void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes, const vector<TBox>& boxes) {
+void PrintBoxes(sf::RenderWindow& window, const std::vector<TFilledBox>& filledBoxes) {
     if (filledBoxes.size() == 0) {
         TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
         while (window.isOpen()) {
@@ -141,7 +137,7 @@ void PrintBoxes(sf::RenderWindow& window, const vector<TFilledBox>& filledBoxes,
             window.display();
         }
     } else {
-        ShowOrder(window, filledBoxes, boxes);
+        ShowOrder(window, filledBoxes);
     }
 }
 
@@ -169,11 +165,10 @@ void DidntBuyAnything(sf::RenderWindow& window) {
 }
 
 void UserMode(sf::RenderWindow& window) {
-    vector<TBox> availableBoxes = GetAvailableBoxes();
-    vector<pair<TItem, uint32_t>> items = GetItems();
-    TShop shop(items, availableBoxes);
+    const std::vector<TBox>& availableBoxes = NDataProvider::AvailableBoxes;
+    const std::vector<std::pair<TItem, uint32_t>>& items = NDataProvider::Items;
 
-    vector<TItemTile> itemTiles;
+    std::vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
         itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first, items[i].second, true));
     }
@@ -227,12 +222,12 @@ void UserMode(sf::RenderWindow& window) {
                             if (itemTiles[i].MinusButton.IsIn(px, py)) {
                                 if (itemTiles[i].CurCnt > 0) {
                                     itemTiles[i].CurCnt--;
-                                    shop.DeleteItem(items[i].first.ItemID);
+                                    NHttp::DeleteItem(items[i].first.ItemID);
                                 }
                             } else if (itemTiles[i].PlusButton.IsIn(px, py)) {
                                 if (itemTiles[i].CurCnt < itemTiles[i].MaxCnt) {
                                     itemTiles[i].CurCnt++;
-                                    shop.AddItem(items[i].first.ItemID);
+                                    NHttp::AddItem(items[i].first.ItemID);
                                 }
                             }
                         }
@@ -274,30 +269,30 @@ void UserMode(sf::RenderWindow& window) {
     }
 
     
-    if (shop.OrderIsEmpty()) {
+    if (NHttp::OrderIsEmpty()) {
         DidntBuyAnything(window);
     } else {
-        vector<TFilledBox> filledBoxes = shop.Buy();
-        vector<pair<TItem, int32_t>> boughtItems;
+        std::vector<TFilledBox> filledBoxes = NHttp::ShopBuy();
+        std::vector<std::pair<uint64_t, int32_t>> boughtItems;
         for (const TFilledBox& filledBox : filledBoxes) {
-            for (const TItem& item : filledBox.Items) {
-                boughtItems.emplace_back(item, -1);
+            for (const uint64_t& itemID : filledBox.ItemIDs) {
+                boughtItems.emplace_back(itemID, -1);
             }
         }
-        SaveOrder(filledBoxes);
-        UpdateItems(boughtItems);
-        PrintBoxes(window, filledBoxes, availableBoxes);
+        NHttp::SaveOrder(filledBoxes);
+        NHttp::UpdateItems(boughtItems);
+        PrintBoxes(window, filledBoxes);
     }
 }
 
 void AdminAddDeleteItem(sf::RenderWindow& window) {
-    vector<pair<TItem, uint32_t>> items = GetItems();
-    vector<pair<TItem, int32_t>> newItems(items.size());
+    const std::vector<std::pair<TItem, uint32_t>>& items = NDataProvider::Items;
+    std::vector<std::pair<uint64_t, int32_t>> newItems(items.size());
     for (size_t i = 0; i < items.size(); i++) {
-        newItems[i] = {items[i].first, 0};
+        newItems[i] = {items[i].first.ItemID, 0};
     }
 
-    vector<TItemTile> itemTiles;
+    std::vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
         itemTiles.push_back(TItemTile(250.f, 250.f, items[i].first, items[i].second, false));
     }
@@ -391,13 +386,13 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         window.display();
     }
 
-    UpdateItems(newItems);
+    NHttp::UpdateItems(newItems);
 }
 
-string GetItemsString(const vector<TItem>& items) {
-    string ans = "Your new items:\nName\tWeight\tVolume";
+std::string GetItemsString(const std::vector<TItem>& items) {
+    std::string ans = "Your new items:\nName\tWeight\tVolume";
     for (const TItem& item : items) {
-        ans += "\n" + item.ItemName + "\t\t\t" + to_string(item.Weight) + "\t\t\t" + to_string(item.Volume) + "\t\t\t" + to_string(item.Cost);
+        ans += "\n" + item.ItemName + "\t\t\t" + std::to_string(item.Weight) + "\t\t\t" + std::to_string(item.Volume) + "\t\t\t" + std::to_string(item.Cost);
     }
     return ans;
 }
@@ -411,8 +406,8 @@ void AdminCreateItem(sf::RenderWindow& window) {
     TTextField costField(790.f, 550.f, 100.f, 50.f, "Cost");
     TTextField imageField(1020.f, 550.f, 100.f, 50.f, "Image Path");
     TButton addButton(1250.f, 550.f, 100.f, 50.f, "Add");
-    string selected = "name";
-    vector<TItem> items;
+    std::string selected = "name";
+    std::vector<TItem> items;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
@@ -452,14 +447,12 @@ void AdminCreateItem(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    string selectQuery = "select itemName from Item where itemName = '" + nameField.Label + "';";
-                    auto selectResponse = NDataBase::Query(selectQuery);
-                    if (!selectResponse.empty()) {
+                    if (NHttp::CheckIfItemExists(nameField.Label)) {
                         items.push_back(fakeItem);
                     } else {
                         TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
                         items.push_back(newItem);
-                        InsertItem(newItem, imageField.Label);
+                        NHttp::InsertItem(newItem, imageField.Label);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -494,13 +487,13 @@ void AdminCreateItem(sf::RenderWindow& window) {
 }
 
 void AdminAddDeleteBox(sf::RenderWindow& window) {
-    vector<pair<TBox, uint32_t>> boxes = GetBoxes();
-    vector<pair<TBox, int32_t>> newBoxes(boxes.size());
+    const std::vector<std::pair<TBox, uint32_t>>& boxes = NDataProvider::Boxes;
+    std::vector<std::pair<uint64_t, int32_t>> newBoxes(boxes.size());
     for (size_t i = 0; i < boxes.size(); i++) {
-        newBoxes[i] = {boxes[i].first, 0};
+        newBoxes[i] = {boxes[i].first.BoxID, 0};
     }
 
-    vector<TBoxTile> boxTiles;
+    std::vector<TBoxTile> boxTiles;
     for (size_t i = 0; i < boxes.size(); i++) {
         boxTiles.push_back(TBoxTile(250.f, 250.f, boxes[i].first.BoxID, boxes[i].first.BoxName, boxes[i].second, boxes[i].first.Image));
     }
@@ -594,13 +587,13 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
         window.display();
     }
 
-    UpdateBoxes(newBoxes);
+    NHttp::UpdateBoxes(newBoxes);
 }
 
-string GetBoxesString(const vector<TBox>& boxes) {
-    string ans = "Your new boxes:\nName\tMaxWeight\tMaxVolume\tCost";
+std::string GetBoxesString(const std::vector<TBox>& boxes) {
+    std::string ans = "Your new boxes:\nName\tMaxWeight\tMaxVolume\tCost";
     for (const TBox& box : boxes) {
-        ans += "\n" + box.BoxName + "\t\t\t" + to_string(box.MaxWeight) + "\t\t\t" + to_string(box.MaxVolume) + "\t\t\t" + to_string(box.Cost);
+        ans += "\n" + box.BoxName + "\t\t\t" + std::to_string(box.MaxWeight) + "\t\t\t" + std::to_string(box.MaxVolume) + "\t\t\t" + std::to_string(box.Cost);
     }
     return ans;
 }
@@ -614,8 +607,8 @@ void AdminCreateBox(sf::RenderWindow& window) {
     TTextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
     TTextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
     TButton addButton(1100.f, 550.f, 100.f, 50.f, "Add");
-    string selected = "name";
-    vector<TBox> boxes;
+    std::string selected = "name";
+    std::vector<TBox> boxes;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
@@ -655,12 +648,12 @@ void AdminCreateBox(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    if (CheckIfBoxExists(nameField.Label)) {
+                    if (NHttp::CheckIfBoxExists(nameField.Label)) {
                         boxes.push_back(fakeBox);
                     } else {
                         TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
                         boxes.push_back(newBox);
-                        InsertBox(newBox, imageField.Label);
+                        NHttp::InsertBox(newBox, imageField.Label);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -723,6 +716,8 @@ void AdminMode(sf::RenderWindow& window) {
                 } else if (goBackButton.IsIn(px, py)) {
                     return;
                 }
+                NDataProvider::LoadItems();
+                NDataProvider::LoadBoxes();
             }
         }
 
@@ -738,13 +733,13 @@ void AdminMode(sf::RenderWindow& window) {
 }
 
 void ShowHistory(sf::RenderWindow& window) {
-    vector<TOrder> orders = GetOrders();
-    vector<TButton> orderButtons(orders.size());
+    std::vector<TOrder> orders = NHttp::GetOrders();
+    std::vector<TButton> orderButtons(orders.size());
     for (size_t i = 0; i < orders.size(); i++) {
-        orderButtons[i] = TButton(0.f, 0.f, 1300.f, 50.f, "Order # " + to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
+        orderButtons[i] = TButton(0.f, 0.f, 1300.f, 50.f, "Order # " + std::to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
     }
 
-    vector<TBox> availableBoxes = GetAvailableBoxes();
+    std::vector<TBox> availableBoxes = NHttp::GetAvailableBoxes();
 
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
@@ -777,7 +772,7 @@ void ShowHistory(sf::RenderWindow& window) {
                 } else {
                     for (size_t i = 0; i < orders.size(); i++) {
                         if (orderButtons[i].IsPresent && orderButtons[i].IsIn(px, py)) {
-                            ShowOrder(window, orders[i].FilledBoxes, availableBoxes, orderButtons[i].Label);
+                            ShowOrder(window, orders[i].FilledBoxes, orderButtons[i].Label);
                             break;
                         }
                     }
@@ -833,6 +828,8 @@ void ChooseMode(sf::RenderWindow& window) {
                 }
                 else if (userButton.IsIn(px, py)) {
                     UserMode(window);
+                    NDataProvider::LoadItems();
+                    NDataProvider::LoadBoxes();
                 } else if (historyButton.IsIn(px, py)) {
                     ShowHistory(window);
                 } else if (goBackButton.IsIn(px, py)) {
@@ -852,12 +849,10 @@ void ChooseMode(sf::RenderWindow& window) {
 
 int main() {
     NFont::GetFont();
+    NDataProvider::LoadItems();
+    NDataProvider::LoadBoxes();
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
-    NDataBase::Open("db.sqlite");
-
     ChooseMode(window);
- 
     window.close();
-    NDataBase::Close();
     return 0;
 }
