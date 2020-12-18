@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -95,6 +96,7 @@ std::map<uint64_t, TBox> GetBoxesMap() {
 }
 
 void SaveOrder(const std::vector<std::pair<uint64_t, std::vector<uint64_t>>>& filledBoxes) {
+    std::cout << "SaveOrder" << std::endl;
     const std::string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + CurrentDate() + "');";
     NDataBase::Query(insertOrderQuery);
     int64_t orderID = NDataBase::GetLastInsertID();
