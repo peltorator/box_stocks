@@ -6,29 +6,29 @@
 #include <ostream>
 
 struct TFilledBox {
-    TBox Box;
-    std::vector<TItem> Items;
-    TFilledBox(const TBox& box, const std::vector<TItem>& items = {}) : Box(box), Items(items) {}
+    uint64_t BoxID;
+    std::vector<uint64_t> ItemIDs;
+    TFilledBox(const uint64_t& boxID, const std::vector<uint64_t>& itemIDs = {}) : BoxID(boxID), ItemIDs(itemIDs) {}
+
+    TFilledBox(const TBox& box, const std::vector<TItem>& items = {}) {
+        BoxID = box.BoxID;
+        ItemIDs.reserve(items.size());
+        for (const TItem& item : items) {
+            ItemIDs.push_back(item.ItemID);
+        }
+    }
 
     TFilledBox() = default;
 
     bool operator == (const TFilledBox& other) const {
-        return Box == other.Box && Items == other.Items;
-    }
-
-    uint64_t GetCost() const {
-        uint64_t itemsCost = 0;
-        for (const TItem& item : Items) {
-            itemsCost += item.Cost;
-        }
-        return itemsCost + Box.Cost;
+        return BoxID == other.BoxID && ItemIDs == other.ItemIDs;
     }
 };
 
 std::ostream& operator << (std::ostream& out, TFilledBox filledBox) {
-    out << "Box: " << filledBox.Box << " and Items:";
-    for (const TItem& item : filledBox.Items) {
-        out << " " << item;
+    out << "Box: " << filledBox.BoxID << " and Items:";
+    for (const uint64_t& itemID : filledBox.ItemIDs) {
+        out << " " << itemID;
     }
     return out;
 }
