@@ -2,10 +2,12 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include "font.cpp"
 #include "../ShopModel/item.cpp"
 #include "../ShopModel/box.cpp"
+#include "../DataProvider/data_provider.cpp"
 
 struct TFilledBoxTile {
     float X;
@@ -23,25 +25,30 @@ struct TFilledBoxTile {
 
     TFilledBoxTile() = default;
 
-    TFilledBoxTile(const float dx, const float dy, const TBox& box, const std::string& boxImg, const std::vector<TItem>& items) {
+    TFilledBoxTile(const float dx, const float dy, const uint64_t& boxID, const std::string& boxImg, const std::vector<uint64_t>& itemIDs) {
         X = 0;
         Y = 0;
         Dx = dx;
         Dy = dy;
 
+        const TBox& box = NDataProvider::IdToBox[boxID];
+
         BoxName = box.BoxName;
         BoxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
         BoxCost = box.Cost;
 
-        ItemTextures.resize(items.size());
-        ItemNames.resize(items.size());
-        ItemCosts.resize(items.size());
+        ItemTextures.resize(itemIDs.size());
+        ItemNames.resize(itemIDs.size());
+        ItemCosts.resize(itemIDs.size());
         TotalItemsCost = 0;
-        for (size_t i = 0; i < items.size(); i++) {
-            ItemTextures[i].loadFromMemory(items[i].Image.c_str(), items[i].Image.size());
-            ItemNames[i] = items[i].ItemName;
-            ItemCosts[i] = items[i].Cost;
-            TotalItemsCost += items[i].Cost;
+        for (size_t i = 0; i < itemIDs.size(); i++) {
+            std::cout << itemIDs[i] << std::endl;
+            assert(NDataProvider::IdToItem.count(itemIDs[i]));
+            const TItem& item = NDataProvider::IdToItem[itemIDs[i]];
+            ItemTextures[i].loadFromMemory(item.Image.c_str(), item.Image.size());
+            ItemNames[i] = item.ItemName;
+            ItemCosts[i] = item.Cost;
+            TotalItemsCost += item.Cost;
         }
 
         IsPresent = false;
