@@ -41,4 +41,22 @@ namespace NDataProvider {
             }
         }
     }
+
+    bool CheckIfItemExists(const std::string& itemName) {
+        for (const TItem& item : AllItems) {
+            if (item.ItemName == itemName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CheckIfBoxExists(const std::string& boxName) {
+        for (const TBox& box : AllBoxes) {
+            if (box.BoxName == boxName) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
