@@ -4,14 +4,14 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "../ShopModel/order.cpp"
+#include "../../ShopModel/order.cpp"
 #include "../GraphicModel/button.cpp"
 #include "../GraphicModel/text_field.cpp"
 #include "../GraphicModel/item_tile.cpp"
 #include "../GraphicModel/box_tile.cpp"
 #include "../GraphicModel/filled_box_tile.cpp"
 #include "../GraphicModel/font.cpp"
-#include "../Helper/helper_functions.cpp"
+#include "../../Helper/helper_functions.cpp"
 #include "../HTTP/http_queries.cpp"
 #include "../DataProvider/data_provider.cpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ShopModel/filled_box.cpp"
+#include "../../ShopModel/filled_box.cpp"
 #include "../DataBase/database_queries.cpp"
 #include <vector>
 #include <random>

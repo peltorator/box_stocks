@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <map>
-#include "../ShopModel/filled_box.cpp"
+#include "../../ShopModel/filled_box.cpp"
 #include "../HTTP/http_queries.cpp"
 
 namespace NDataProvider {

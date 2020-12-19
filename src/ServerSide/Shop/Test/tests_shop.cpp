@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "../../../libs/catch2/catch.hpp"
+#include "../../../../libs/catch2/catch.hpp"
 #include "../shop.cpp"
 
 

@@ -6,12 +6,12 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-#include "../ShopModel/item.cpp"
-#include "../ShopModel/box.cpp"
-#include "../ShopModel/order.cpp"
-#include "../ShopModel/filled_box.cpp"
+#include "../../ShopModel/item.cpp"
+#include "../../ShopModel/box.cpp"
+#include "../../ShopModel/order.cpp"
+#include "../../ShopModel/filled_box.cpp"
 #include "database.cpp"
-#include "../Helper/helper_functions.cpp"
+#include "../../Helper/helper_functions.cpp"
 
 void UpdateItem(const uint64_t itemID, const int32_t amount) {
     std::string updateQuery = "update Item set amount = amount + " + std::to_string(amount) + " where itemID = " + std::to_string(itemID) + ";";

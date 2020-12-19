@@ -1,7 +1,7 @@
-#include "shop.cpp"
+#include "../Shop/shop.cpp"
 #include "../DataBase/database.cpp"
 #include "../DataBase/database_queries.cpp"
-#include "../Helper/helper_functions.cpp"
+#include "../../Helper/helper_functions.cpp"
 #include <iostream>
 #include <sstream>
 

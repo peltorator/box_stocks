@@ -3,7 +3,7 @@
 #include <string>
 #include <cmath>
 #include "button.cpp"
-#include "../ShopModel/item.cpp"
+#include "../../ShopModel/item.cpp"
 #include "font.cpp"
 
 struct TItemTile {

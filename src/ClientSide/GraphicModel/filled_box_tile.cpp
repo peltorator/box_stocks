@@ -5,8 +5,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include "font.cpp"
-#include "../ShopModel/item.cpp"
-#include "../ShopModel/box.cpp"
+#include "../../ShopModel/item.cpp"
+#include "../../ShopModel/box.cpp"
 #include "../DataProvider/data_provider.cpp"
 
 struct TFilledBoxTile {

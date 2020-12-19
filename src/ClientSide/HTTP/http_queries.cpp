@@ -3,9 +3,9 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "../ShopModel/filled_box.cpp"
-#include "../ShopModel/order.cpp"
-#include "../../libs/cpp-httplib/httplib.h"
+#include "../../ShopModel/filled_box.cpp"
+#include "../../ShopModel/order.cpp"
+#include "../../../libs/cpp-httplib/httplib.h"
 
 namespace NHttp {
 
