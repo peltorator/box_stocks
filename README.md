@@ -1,7 +1,10 @@
 # Запуск
 
+Сервер:
+`g++ -std=c++17 -shared -o server.so -fPIC server.cpp -lsqlite3 && python3 server.py`
+
 Графический интерфейс:
-`g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsqlite3 -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
+`g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
 
 Юнит тесты магазина:
 `g++ -std=c++17 tests_shop.cpp -o tests_shop && ./tests_shop`
