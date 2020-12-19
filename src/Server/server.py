@@ -73,8 +73,6 @@ class HandleRequests(BaseHTTPRequestHandler):
             content = str(orderIsEmpty)
         elif qtype == 'buy':
             content = libc.BuyOrderToString(shop).decode('utf-8')
-            libc.DeleteShop(shop)
-            shop = libc.MakeShop()
         elif qtype == 'update_item':
             itemID = int(args[1])
             amount = int(args[2])

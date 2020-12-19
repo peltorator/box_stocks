@@ -1,36 +1,30 @@
 #include "shop.h"
 
 TShop::TShop() {
-    RawItems = GetItems();
-    Boxes = GetAvailableBoxes();
-    for (const auto& [item, amount] : RawItems) {
-        Items[item.ItemID] = item;
-        AvailableAmounts[item.ItemID] = amount;
+    std::vector<std::pair<TItem, uint32_t>> itemAmounts = GetItems();
+    _boxes = GetAvailableBoxes();
+    for (const auto& [item, amount] : itemAmounts) {
+        _items[item.ItemID] = item;
+        _availableAmounts[item.ItemID] = amount;
     }
-    rnd = std::mt19937(0);
-}
-
-std::vector<TBox> TShop::GetBoxes() const {
-    return Boxes;
-}
-
-std::vector<std::pair<TItem, uint32_t>> TShop::GetRawItems() const {
-    return RawItems;
+    _rnd = std::mt19937(0);
 }
 
 void TShop::AddItem(const uint64_t itemID, const uint32_t amount) {
-    OrderAmounts[itemID] += amount;
+    _orderAmounts[itemID] += amount;
+    _availableAmounts[itemID] -= amount;
 }
 
 void TShop::DeleteItem(const uint64_t itemID, const uint32_t amount) {
-    OrderAmounts[itemID] -= amount;
+    _orderAmounts[itemID] -= amount;
+    _availableAmounts[itemID] += amount;
 }
 
 std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<TItem>& items) {
     const uint64_t DP_SIZE = (1LL << items.size());
     std::vector<uint64_t> totalWeight(DP_SIZE, 0);
     std::vector<uint64_t> totalVolume(DP_SIZE, 0);
-    std::vector<uint64_t> minCost(DP_SIZE, INF_COST);
+    std::vector<uint64_t> minCost(DP_SIZE, _INF_COST);
     std::vector<std::pair<uint64_t, size_t>> lastBox(DP_SIZE);
     minCost[0] = 0;
 
@@ -42,9 +36,9 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<
             }
         }
         for (uint64_t subMask = mask; subMask > 0; subMask = (subMask - 1) & mask) {
-            for (size_t boxIndex = 0; boxIndex < Boxes.size(); boxIndex++) {
-                const TBox& box = Boxes[boxIndex];
-                if (totalWeight[subMask] <= box.MaxWeight && totalVolume[subMask] <= box.MaxVolume && minCost[mask ^ subMask] != INF_COST) {
+            for (size_t boxIndex = 0; boxIndex < _boxes.size(); boxIndex++) {
+                const TBox& box = _boxes[boxIndex];
+                if (totalWeight[subMask] <= box.MaxWeight && totalVolume[subMask] <= box.MaxVolume && minCost[mask ^ subMask] != _INF_COST) {
                     uint64_t newCost =  minCost[mask ^ subMask] + box.Cost;
                     if (minCost[mask] > newCost) {
                         minCost[mask] = newCost;
@@ -59,12 +53,12 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<
     uint64_t currentMask = DP_SIZE - 1;
     uint64_t cost = minCost[currentMask];
 
-    if (cost == INF_COST) {
+    if (cost == _INF_COST) {
         return {cost, vectorOfBoxes};
     }
 
     while (currentMask != 0) {
-        const uint64_t currentBoxID = Boxes[lastBox[currentMask].second].BoxID;
+        const uint64_t currentBoxID = _boxes[lastBox[currentMask].second].BoxID;
         const uint64_t boxMask = lastBox[currentMask].first;
         std::vector<uint64_t> currentBoxItemIDs;
         for (size_t bit = 0; bit < items.size(); bit++) {
@@ -81,24 +75,25 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<
 
 std::vector<TFilledBox> TShop::Buy() {
     std::vector<TItem> items;
-    for (const auto& [itemID, amount] : OrderAmounts) {
+    for (const auto& [itemID, amount] : _orderAmounts) {
         for (uint32_t ind = 0; ind < amount; ind++) {
-            items.push_back(TItem(Items[itemID].ItemID, Items[itemID].ItemName, Items[itemID].Weight, Items[itemID].Volume, Items[itemID].Cost));
+            items.push_back(TItem(_items[itemID].ItemID, _items[itemID].ItemName, _items[itemID].Weight, _items[itemID].Volume, _items[itemID].Cost));
         }
     }
+    _orderAmounts.clear();
     std::vector<TFilledBox> bestFilledBoxes;
-    uint64_t bestCost = INF_COST;
-    for (size_t partitionIndex = 0; partitionIndex < PARTITIONS; partitionIndex++) {
-        shuffle(items.begin(), items.end(), rnd);
+    uint64_t bestCost = _INF_COST;
+    for (size_t partitionIndex = 0; partitionIndex < _PARTITIONS; partitionIndex++) {
+        shuffle(items.begin(), items.end(), _rnd);
         uint64_t curCost = 0;
         std::vector<TFilledBox> curFilledBoxes;
-        for (size_t i = 0; i < items.size(); i += MAX_ITEMS_IN_BLOCK) {
+        for (size_t i = 0; i < items.size(); i += _MAX_ITEMS_IN_BLOCK) {
             std::vector<TItem> curItems;
-            for (size_t j = i; j < i + MAX_ITEMS_IN_BLOCK && j < items.size(); j++) {
+            for (size_t j = i; j < i + _MAX_ITEMS_IN_BLOCK && j < items.size(); j++) {
                 curItems.push_back(items[j]);
             }
             const auto& [cost, boxes] = PackSmall(curItems);
-            if (cost == INF_COST) {
+            if (cost == _INF_COST) {
                 return std::vector<TFilledBox>();
             }
             curCost += cost;
@@ -115,7 +110,7 @@ std::vector<TFilledBox> TShop::Buy() {
 }
 
 bool TShop::OrderIsEmpty() const {
-    for (const auto& [itemId, amount] : OrderAmounts) {
+    for (const auto& [itemId, amount] : _orderAmounts) {
         if (amount > 0) {
             return false;
         }
