@@ -6,10 +6,10 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-#include "../../ShopModel/item.cpp"
-#include "../../ShopModel/box.cpp"
-#include "../../ShopModel/order.cpp"
-#include "../../ShopModel/filled_box.cpp"
+#include "../../Model/item.cpp"
+#include "../../Model/box.cpp"
+#include "../../Model/order.cpp"
+#include "../../Model/filled_box.cpp"
 #include "database.cpp"
 #include "../../Helper/helper_functions.cpp"
 

@@ -3,8 +3,10 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "../../ShopModel/filled_box.cpp"
-#include "../../ShopModel/order.cpp"
+#include "../../Model/filled_box.cpp"
+#include "../../Model/box.cpp"
+#include "../../Model/item.cpp"
+#include "../../Model/order.cpp"
 #include "../../../libs/cpp-httplib/httplib.h"
 #include "../../Helper/helper_functions.cpp"
 

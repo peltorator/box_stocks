@@ -1,9 +1,10 @@
 #pragma once
 
-#include "box.cpp"
-#include "item.cpp"
 #include <vector>
 #include <ostream>
+
+#include "item.cpp"
+#include "box.cpp"
 
 struct TFilledBox {
     uint64_t BoxID;

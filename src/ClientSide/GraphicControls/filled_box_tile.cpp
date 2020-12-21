@@ -5,9 +5,9 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include "font.cpp"
-#include "../../ShopModel/item.cpp"
-#include "../../ShopModel/box.cpp"
-#include "../DataProvider/data_provider.cpp"
+#include "../../Model/item.cpp"
+#include "../../Model/box.cpp"
+#include "../DataCash/data_cash.cpp"
 
 struct TFilledBoxTile {
     float X;
@@ -31,7 +31,7 @@ struct TFilledBoxTile {
         Dx = dx;
         Dy = dy;
 
-        const TBox& box = NDataProvider::IdToBox[boxID];
+        const TBox& box = NDataCash::IdToBox[boxID];
 
         BoxName = box.BoxName;
         BoxTexture.loadFromMemory(boxImg.c_str(), boxImg.size());
@@ -42,7 +42,7 @@ struct TFilledBoxTile {
         ItemCosts.resize(itemIDs.size());
         TotalItemsCost = 0;
         for (size_t i = 0; i < itemIDs.size(); i++) {
-            const TItem& item = NDataProvider::IdToItem[itemIDs[i]];
+            const TItem& item = NDataCash::IdToItem[itemIDs[i]];
             ItemTextures[i].loadFromMemory(item.Image.c_str(), item.Image.size());
             ItemNames[i] = item.ItemName;
             ItemCosts[i] = item.Cost;

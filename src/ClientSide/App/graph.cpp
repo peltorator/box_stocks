@@ -4,16 +4,19 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "../../ShopModel/order.cpp"
-#include "../GraphicModel/button.cpp"
-#include "../GraphicModel/text_field.cpp"
-#include "../GraphicModel/item_tile.cpp"
-#include "../GraphicModel/box_tile.cpp"
-#include "../GraphicModel/filled_box_tile.cpp"
-#include "../GraphicModel/font.cpp"
+#include "../../Model/order.cpp"
+#include "../../Model/filled_box.cpp"
+#include "../../Model/box.cpp"
+#include "../../Model/item.cpp"
+#include "../GraphicControls/button.cpp"
+#include "../GraphicControls/text_field.cpp"
+#include "../GraphicControls/item_tile.cpp"
+#include "../GraphicControls/box_tile.cpp"
+#include "../GraphicControls/filled_box_tile.cpp"
+#include "../GraphicControls/font.cpp"
 #include "../../Helper/helper_functions.cpp"
 #include "../HTTP/http_queries.cpp"
-#include "../DataProvider/data_provider.cpp"
+#include "../DataCash/data_cash.cpp"
 
 
 void AddTitle(sf::RenderWindow& window, const std::string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
@@ -32,14 +35,14 @@ void ShowOrder(sf::RenderWindow& window, const std::vector<TFilledBox>& filledBo
     }
     std::vector<TFilledBoxTile> filledTBoxTiles;
     for (size_t i = 0; i < filledBoxes.size(); i++) {
-        std::string curImage = NDataProvider::IdToBox[filledBoxes[i].BoxID].Image;
+        std::string curImage = NDataCash::IdToBox[filledBoxes[i].BoxID].Image;
         filledTBoxTiles.push_back(TFilledBoxTile(250.f, 550.f, filledBoxes[i].BoxID, curImage, filledBoxes[i].ItemIDs));
     }
     uint64_t orderTotalCost = 0;
     for (const TFilledBox& filledBox : filledBoxes) {
-        orderTotalCost += NDataProvider::IdToBox[filledBox.BoxID].Cost;
+        orderTotalCost += NDataCash::IdToBox[filledBox.BoxID].Cost;
         for (const uint64_t &itemID : filledBox.ItemIDs) {
-            orderTotalCost += NDataProvider::IdToItem[itemID].Cost;
+            orderTotalCost += NDataCash::IdToItem[itemID].Cost;
         }
     }
 
@@ -165,8 +168,8 @@ void DidntBuyAnything(sf::RenderWindow& window) {
 }
 
 void UserMode(sf::RenderWindow& window) {
-    const std::vector<TBox>& availableBoxes = NDataProvider::AvailableBoxes;
-    const std::vector<std::pair<TItem, uint32_t>>& items = NDataProvider::Items;
+    const std::vector<TBox>& availableBoxes = NDataCash::AvailableBoxes;
+    const std::vector<std::pair<TItem, uint32_t>>& items = NDataCash::Items;
 
     std::vector<TItemTile> itemTiles;
     for (size_t i = 0; i < items.size(); i++) {
@@ -278,7 +281,7 @@ void UserMode(sf::RenderWindow& window) {
 }
 
 void AdminAddDeleteItem(sf::RenderWindow& window) {
-    const std::vector<std::pair<TItem, uint32_t>>& items = NDataProvider::Items;
+    const std::vector<std::pair<TItem, uint32_t>>& items = NDataCash::Items;
     std::vector<std::pair<uint64_t, int32_t>> newItems(items.size());
     for (size_t i = 0; i < items.size(); i++) {
         newItems[i] = {items[i].first.ItemID, 0};
@@ -379,7 +382,7 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
     }
 
     for (const auto [itemID, amount] : newItems) {
-        NDataProvider::UpdateItem(itemID, amount);
+        NDataCash::UpdateItem(itemID, amount);
     }
     NHttp::UpdateItems(newItems);
 }
@@ -442,14 +445,14 @@ void AdminCreateItem(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    if (NDataProvider::CheckIfItemExists(nameField.Label)) {
+                    if (NDataCash::CheckIfItemExists(nameField.Label)) {
                         items.push_back(fakeItem);
                     } else {
                         TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
                         items.push_back(newItem);
                         const uint64_t newItemID = NHttp::InsertItem(newItem);
                         newItem.ItemID = newItemID;
-                        NDataProvider::AddNewItem(newItem);
+                        NDataCash::AddNewItem(newItem);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -484,7 +487,7 @@ void AdminCreateItem(sf::RenderWindow& window) {
 }
 
 void AdminAddDeleteBox(sf::RenderWindow& window) {
-    const std::vector<std::pair<TBox, uint32_t>>& boxes = NDataProvider::Boxes;
+    const std::vector<std::pair<TBox, uint32_t>>& boxes = NDataCash::Boxes;
     std::vector<std::pair<uint64_t, int32_t>> newBoxes(boxes.size());
     for (size_t i = 0; i < boxes.size(); i++) {
         newBoxes[i] = {boxes[i].first.BoxID, 0};
@@ -586,7 +589,7 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
 
     NHttp::UpdateBoxes(newBoxes);
     for (auto [boxID, amount] : newBoxes) {
-        NDataProvider::UpdateBox(boxID, amount);
+        NDataCash::UpdateBox(boxID, amount);
     }
 }
 
@@ -648,14 +651,14 @@ void AdminCreateBox(sf::RenderWindow& window) {
                 if (goBackButton.IsIn(px, py)) {
                     return;
                 } else if (addButton.IsIn(px, py)) {
-                    if (NDataProvider::CheckIfBoxExists(nameField.Label)) {
+                    if (NDataCash::CheckIfBoxExists(nameField.Label)) {
                         boxes.push_back(fakeBox);
                     } else {
                         TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
                         boxes.push_back(newBox);
                         const uint64_t newBoxID = NHttp::InsertBox(newBox);
                         newBox.BoxID = newBoxID;
-                        NDataProvider::AddNewBox(newBox);
+                        NDataCash::AddNewBox(newBox);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -847,8 +850,8 @@ void ChooseMode(sf::RenderWindow& window) {
 
 int main() {
     NFont::GetFont();
-    NDataProvider::LoadItems();
-    NDataProvider::LoadBoxes();
+    NDataCash::LoadItems();
+    NDataCash::LoadBoxes();
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
     ChooseMode(window);
     window.close();

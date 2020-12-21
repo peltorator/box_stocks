@@ -1,10 +1,11 @@
 #pragma once
 #include <vector>
 #include <map>
-#include "../../ShopModel/filled_box.cpp"
+#include "../../Model/box.cpp"
+#include "../../Model/item.cpp"
 #include "../HTTP/http_queries.cpp"
 
-namespace NDataProvider {
+namespace NDataCash {
     std::vector<TItem> AllItems;
     std::vector<TBox> AllBoxes;
 
