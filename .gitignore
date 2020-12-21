@@ -68,3 +68,4 @@ relative/path/to/dir/anotherfile
 *.sql
 *.sqlite
 *.DS_Store
+*.icloud
