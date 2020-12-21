@@ -23,14 +23,14 @@ libc.DBUpdateItem.argtypes = [c_ulonglong, c_int]
 libc.DBUpdateBox.argtypes = [c_ulonglong, c_int]
 
 libc.DBInsertItem.argtypes = [c_char_p, c_ulonglong, c_ulonglong, c_ulonglong, c_char_p]
+libc.DBInsertItem.restype = c_ulonglong
 
 libc.DBInsertBox.argtypes = [c_char_p, c_ulonglong, c_ulonglong, c_ulonglong, c_char_p]
+libc.DBInsertBox.restype = c_ulonglong
 
 libc.DBGetItems.restype = c_char_p
 
 libc.DBGetBoxes.restype = c_char_p
-
-libc.DBSaveOrder.argtypes = [c_char_p]
 
 libc.DBGetOrders.restype = c_char_p
 
@@ -87,14 +87,14 @@ class HandleRequests(BaseHTTPRequestHandler):
             volume = int(args[3])
             cost = int(args[4])
             image = args[5]
-            libc.DBInsertItem(itemName.encode('utf-8'), weight, volume, cost, image.encode('utf-8'))
+            content = str(libc.DBInsertItem(itemName.encode('utf-8'), weight, volume, cost, image.encode('utf-8')))
         elif qtype == 'insert_box':
             boxName = args[1]
             maxWeight = int(args[2])
             maxVolume = int(args[3])
             cost = int(args[4])
             image = args[5]
-            libc.DBInsertBox(boxName.encode('utf-8'), maxWeight, maxVolume, cost, image.encode('utf-8'))
+            content = str(libc.DBInsertBox(boxName.encode('utf-8'), maxWeight, maxVolume, cost, image.encode('utf-8')))
         elif qtype == 'get_items':
             print(libc.DBGetItems())
             content = libc.DBGetItems().decode('utf-8')

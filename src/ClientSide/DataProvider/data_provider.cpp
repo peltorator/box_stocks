@@ -42,6 +42,48 @@ namespace NDataProvider {
         }
     }
 
+    void AddNewItem(const TItem& item) {
+        AllItems.push_back(item);
+        Items.emplace_back(item, 0);
+        IdToItem[item.ItemID] = item;
+    }
+
+    void AddNewBox(const TBox& box) {
+        AllBoxes.push_back(box);
+        Boxes.emplace_back(box, 0);
+        IdToBox[box.BoxID] = box;
+    }
+
+    void UpdateItem(const uint64_t itemID, const int32_t amount) {
+        if (amount == 0) {
+            return;
+        }
+        for (auto& itemAndAmount : Items) {
+            if (itemAndAmount.first.ItemID == itemID) {
+                itemAndAmount.second += amount;
+                break;
+            }
+        }
+    }
+
+    void UpdateBox(const uint64_t boxID, const int32_t amount) {
+        if (amount == 0) {
+            return;
+        }
+        for (auto& boxAndAvailability : Boxes) {
+            if (boxAndAvailability.first.BoxID == boxID) {
+                boxAndAvailability.second += amount;
+                break;
+            }
+        }
+        for (size_t i = 0; i < AvailableBoxes.size(); i++) {
+            if (AvailableBoxes[i].BoxID == boxID) {
+                AvailableBoxes.erase(AvailableBoxes.begin() + i);
+                break;
+            }
+        }
+    }
+
     bool CheckIfItemExists(const std::string& itemName) {
         for (const TItem& item : AllItems) {
             if (item.ItemName == itemName) {

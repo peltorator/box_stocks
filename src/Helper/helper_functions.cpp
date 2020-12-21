@@ -23,8 +23,8 @@ const std::string CurrentDate() {
     return buf;
 }
 
-uint64_t ToInt(const std::string& s) {
-    uint64_t ans = 0;
+int64_t ToInt(const std::string& s) {
+    int64_t ans = 0;
     bool negate = false;
     for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
@@ -38,6 +38,19 @@ uint64_t ToInt(const std::string& s) {
     }
     if (negate) {
         ans = -ans;
+    }
+    return ans;
+}
+
+std::string GetImageBytes(const std::string &filename) {
+    std::ifstream file(filename, std::ios::binary);
+    std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string ans;
+    ans.reserve(bytes.size() << 3);
+    for (size_t i = 0; i < bytes.size(); i++) {
+        for (int j = 7; j >= 0; j--) {
+            ans.push_back(((bytes[i] >> j) & 1) + '0');
+        }
     }
     return ans;
 }

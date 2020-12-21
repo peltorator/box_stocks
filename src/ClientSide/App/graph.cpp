@@ -273,14 +273,6 @@ void UserMode(sf::RenderWindow& window) {
         DidntBuyAnything(window);
     } else {
         std::vector<TFilledBox> filledBoxes = NHttp::ShopBuy();
-        std::vector<std::pair<uint64_t, int32_t>> boughtItems;
-        for (const TFilledBox& filledBox : filledBoxes) {
-            for (const uint64_t& itemID : filledBox.ItemIDs) {
-                boughtItems.emplace_back(itemID, -1);
-            }
-        }
-        NHttp::SaveOrder(filledBoxes);
-        NHttp::UpdateItems(boughtItems);
         PrintBoxes(window, filledBoxes);
     }
 }
@@ -386,6 +378,9 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
         window.display();
     }
 
+    for (const auto [itemID, amount] : newItems) {
+        NDataProvider::UpdateItem(itemID, amount);
+    }
     NHttp::UpdateItems(newItems);
 }
 
@@ -450,9 +445,11 @@ void AdminCreateItem(sf::RenderWindow& window) {
                     if (NDataProvider::CheckIfItemExists(nameField.Label)) {
                         items.push_back(fakeItem);
                     } else {
-                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
+                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
                         items.push_back(newItem);
-                        NHttp::InsertItem(newItem, imageField.Label);
+                        const uint64_t newItemID = NHttp::InsertItem(newItem);
+                        newItem.ItemID = newItemID;
+                        NDataProvider::AddNewItem(newItem);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -588,6 +585,9 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
     }
 
     NHttp::UpdateBoxes(newBoxes);
+    for (auto [boxID, amount] : newBoxes) {
+        NDataProvider::UpdateBox(boxID, amount);
+    }
 }
 
 std::string GetBoxesString(const std::vector<TBox>& boxes) {
@@ -651,9 +651,11 @@ void AdminCreateBox(sf::RenderWindow& window) {
                     if (NDataProvider::CheckIfBoxExists(nameField.Label)) {
                         boxes.push_back(fakeBox);
                     } else {
-                        TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label));
+                        TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
                         boxes.push_back(newBox);
-                        NHttp::InsertBox(newBox, imageField.Label);
+                        const uint64_t newBoxID = NHttp::InsertBox(newBox);
+                        newBox.BoxID = newBoxID;
+                        NDataProvider::AddNewBox(newBox);
                     }
                     nameField.Clear();
                     weightField.Clear();
@@ -716,8 +718,6 @@ void AdminMode(sf::RenderWindow& window) {
                 } else if (goBackButton.IsIn(px, py)) {
                     return;
                 }
-                NDataProvider::LoadItems();
-                NDataProvider::LoadBoxes();
             }
         }
 
@@ -742,11 +742,11 @@ void ShowHistory(sf::RenderWindow& window) {
     std::vector<TBox> availableBoxes = NHttp::GetAvailableBoxes();
 
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    TButton leftButton(25.f, 75.f, 25.f, 25.f, "<");
-    TButton rightButton(1350.f, 75.f, 25.f, 25.f, ">");
+    TButton leftButton(25.f, 60.f, 25.f, 25.f, "<");
+    TButton rightButton(1350.f, 60.f, 25.f, 25.f, ">");
 
     size_t pageIndex = 0;
-    const size_t rows = 13;
+    const size_t rows = 8;
 
     bool quit = false;
     while (window.isOpen() && !quit) {
@@ -828,8 +828,6 @@ void ChooseMode(sf::RenderWindow& window) {
                 }
                 else if (userButton.IsIn(px, py)) {
                     UserMode(window);
-                    NDataProvider::LoadItems();
-                    NDataProvider::LoadBoxes();
                 } else if (historyButton.IsIn(px, py)) {
                     ShowHistory(window);
                 } else if (goBackButton.IsIn(px, py)) {

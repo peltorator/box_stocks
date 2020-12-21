@@ -6,6 +6,7 @@
 #include "../../ShopModel/filled_box.cpp"
 #include "../../ShopModel/order.cpp"
 #include "../../../libs/cpp-httplib/httplib.h"
+#include "../../Helper/helper_functions.cpp"
 
 namespace NHttp {
 
@@ -22,19 +23,6 @@ namespace NHttp {
             bytes.push_back(c);
         }
         return bytes;
-    }
-
-    std::string GetImageBytes(const std::string &filename) {
-        std::ifstream file(filename, std::ios::binary);
-        std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        std::string ans;
-        ans.reserve(bytes.size() << 3);
-        for (size_t i = 0; i < bytes.size(); i++) {
-            for (int j = 7; j >= 0; j--) {
-                ans.push_back(((bytes[i] >> j) & 1) + '0');
-            }
-        }
-        return ans;
     }
 
     std::vector<std::pair<TBox, uint32_t>> GetBoxes() {
@@ -138,8 +126,9 @@ namespace NHttp {
         }
     }
 
-    void InsertItem(const TItem& item, const std::string& imagePath) {
-        auto res = cli.Get(("/insert_item/" + item.ItemName + "/" + std::to_string(item.Weight) + "/" + std::to_string(item.Volume) + "/" + std::to_string(item.Cost) + "/" + GetImageBytes(imagePath)).c_str());
+    uint64_t InsertItem(const TItem& item) {
+        auto res = cli.Get(("/insert_item/" + item.ItemName + "/" + std::to_string(item.Weight) + "/" + std::to_string(item.Volume) + "/" + std::to_string(item.Cost) + "/" + item.Image).c_str());
+        return ToInt(res->body);
     }
 
     void UpdateBoxes(const std::vector<std::pair<uint64_t, int32_t>>& boxes) {
@@ -148,8 +137,9 @@ namespace NHttp {
         }
     }
 
-    void InsertBox(const TBox& box, const std::string& imagePath) {
-         auto res = cli.Get(("/insert_box/" + box.BoxName + "/" + std::to_string(box.MaxWeight) + "/" + std::to_string(box.MaxVolume) + "/" + std::to_string(box.Cost) + "/" + GetImageBytes(imagePath)).c_str());
+    uint64_t InsertBox(const TBox& box) {
+        auto res = cli.Get(("/insert_box/" + box.BoxName + "/" + std::to_string(box.MaxWeight) + "/" + std::to_string(box.MaxVolume) + "/" + std::to_string(box.Cost) + "/" + box.Image).c_str());
+        return ToInt(res->body);
     }
 
     std::vector<TOrder> GetOrders() {

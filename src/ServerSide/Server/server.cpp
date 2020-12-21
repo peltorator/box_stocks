@@ -2,7 +2,6 @@
 #include "../DataBase/database.cpp"
 #include "../DataBase/database_queries.cpp"
 #include "../../Helper/helper_functions.cpp"
-#include <iostream>
 #include <sstream>
 
 std::string FilledBoxToString(const TFilledBox& filledBox) {
@@ -45,29 +44,6 @@ std::vector<uint64_t> ParsePath(const std::string& s) {
         }
     }
     return vals;
-}
-
-std::vector<std::pair<uint64_t, std::vector<uint64_t>>> StringToOrder(std::string s) {
-    std::cout << "StringToOrderAA" << std::endl;
-    std::vector<uint64_t> vals = ParsePath(s + "/");
-    for (uint64_t i : vals) {
-        std::cout << "a " << i << std::endl;
-    }
-    std::vector<std::pair<uint64_t, std::vector<uint64_t>>> order;
-    int ind = 0;
-    size_t orderSize = vals[ind++];
-    order.reserve(orderSize);
-    for (size_t i = 0; i < orderSize; i++) {
-        uint64_t boxID = vals[ind++];
-        std::vector<uint64_t> itemIDs;
-        size_t itemsSize = vals[ind++];
-        itemIDs.reserve(itemsSize);
-        for (size_t j = 0; j < itemsSize; j++) {
-            itemIDs.push_back(vals[ind++]);
-        }
-        order.emplace_back(boxID, itemIDs);
-    }
-    return order;
 }
 
 std::string OrderToString(const TOrder& order) {
@@ -125,12 +101,12 @@ extern "C" {
         UpdateBox(boxID, amount);
     }
 
-    void DBInsertItem(const char* itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const char* image) {
-        InsertItem(std::string(itemName), weight, volume, cost, std::string(image));
+    uint64_t DBInsertItem(const char* itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const char* image) {
+        return InsertItem(std::string(itemName), weight, volume, cost, std::string(image));
     }
 
-    void DBInsertBox(const char* boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const char* image) {
-        InsertBox(std::string(boxName), maxWeight, maxVolume, cost, std::string(image));
+    uint64_t DBInsertBox(const char* boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const char* image) {
+        return InsertBox(std::string(boxName), maxWeight, maxVolume, cost, std::string(image));
     }
 
     const char* DBGetItems() {
@@ -157,11 +133,6 @@ extern "C" {
         return chars;
     }
  
-    void DBSaveOrder(const char* s) {
-        std::cout << "DBSaveOrder" << std::endl;
-        SaveOrder(StringToOrder(s));
-    }
-
     const char* DBGetOrders() {
         std::vector<TOrder> orders = GetOrders();
         std::stringstream s;

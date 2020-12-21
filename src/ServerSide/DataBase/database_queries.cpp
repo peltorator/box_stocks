@@ -23,14 +23,16 @@ void UpdateBox(const uint64_t boxID, const int32_t amount) {
     NDataBase::Query(updateQuery);
 }
 
-void InsertItem(const std::string itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const std::string& image) {
+uint64_t InsertItem(const std::string itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const std::string& image) {
     std::string insertQuery = "insert into Item(itemName, weight, volume, cost, amount, image) values ('" + itemName + "', " + std::to_string(weight) + ", " + std::to_string(volume) + ", " + std::to_string(cost) + ", 0, '" + image + "');";
     NDataBase::Query(insertQuery);
+    return NDataBase::GetLastInsertID();
 }
 
-void InsertBox(const std::string boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& image) {
+uint64_t InsertBox(const std::string boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const std::string& image) {
     std::string insertQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values ('" + boxName + "', " + std::to_string(maxWeight) + ", " + std::to_string(maxVolume) + ", " + std::to_string(cost) + ", 1, '" + image + "');";
     NDataBase::Query(insertQuery);
+    return NDataBase::GetLastInsertID();
 }
 
 std::vector<std::pair<TItem, uint32_t>> GetItems() {
@@ -95,18 +97,18 @@ std::map<uint64_t, TBox> GetBoxesMap() {
     return boxesMap;
 }
 
-void SaveOrder(const std::vector<std::pair<uint64_t, std::vector<uint64_t>>>& filledBoxes) {
+void SaveOrder(const std::vector<TFilledBox>& filledBoxes) {
     std::cout << "SaveOrder" << std::endl;
     const std::string insertOrderQuery = "insert into Orders(userID, orderDate) values (1, '" + CurrentDate() + "');";
     NDataBase::Query(insertOrderQuery);
     int64_t orderID = NDataBase::GetLastInsertID();
     
-    for (const auto& [boxID, itemIDs] : filledBoxes) {
-        const std::string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + std::to_string(boxID) + ", " + std::to_string(orderID) + ");";
+    for (const TFilledBox& filledBox : filledBoxes) {
+        const std::string insertFilledBoxQuery = "insert into FilledBox(boxID, orderID) values (" + std::to_string(filledBox.BoxID) + ", " + std::to_string(orderID) + ");";
         NDataBase::Query(insertFilledBoxQuery);
         int64_t filledBoxID = NDataBase::GetLastInsertID();
 
-        for (const uint64_t& itemID : itemIDs) {
+        for (const uint64_t& itemID : filledBox.ItemIDs) {
             const std::string insertItemsForFilledBoxQuery = "insert into ItemsForFilledBox(itemID, filledBoxID) values (" + std::to_string(itemID) + ", " + std::to_string(filledBoxID) + ");";
             NDataBase::Query(insertItemsForFilledBoxQuery);
         }

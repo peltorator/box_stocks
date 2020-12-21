@@ -106,6 +106,10 @@ std::vector<TFilledBox> TShop::Buy() {
             bestFilledBoxes = curFilledBoxes;
         }
     }
+    for (const TItem& item : items) {
+        UpdateItem(item.ItemID, -1);
+    }
+    SaveOrder(bestFilledBoxes);
     return bestFilledBoxes;
 }
 
