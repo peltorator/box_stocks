@@ -13,7 +13,7 @@
 //  https://zuhd.org
 //  http://muflihun.com
 //
-
+#pragma once
 #include "easylogging++.h"
 
 #if defined(AUTO_INITIALIZE_EASYLOGGINGPP)
