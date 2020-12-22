@@ -1,7 +1,9 @@
 #pragma once
+
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <cmath>
+
 #include "button.cpp"
 #include "../../Model/item.cpp"
 #include "font.cpp"

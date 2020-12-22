@@ -1,7 +1,8 @@
 #define CATCH_CONFIG_MAIN
+#include <algorithm>
+
 #include "../../../../libs/catch2/catch.hpp"
 #include "../shop_session.cpp"
-#include <algorithm>
 
 void SortOrder(std::vector<TFilledBox>& order) {
     for (TFilledBox& filledBox : order) {

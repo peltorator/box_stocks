@@ -1,6 +1,8 @@
 #pragma once
+
 #include <string>
 #include <vector>
+
 #include "filled_box.cpp"
 
 struct TOrder {

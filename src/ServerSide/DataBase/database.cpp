@@ -1,8 +1,11 @@
 #pragma once
-#include "../../../libs/sqlite/sqlite3.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
+
+#include "../../../libs/sqlite/sqlite3.h"
 
 namespace NDataBase {
     sqlite3* db = nullptr;

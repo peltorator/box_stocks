@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <ctime>
+#include <iterator>
 
 bool StartsWith(const std::string& str, const std::string& pref) {
     if (pref.size() > str.size()) {

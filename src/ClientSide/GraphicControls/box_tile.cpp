@@ -1,6 +1,8 @@
 #pragma once
+
 #include <cmath>
 #include <SFML/Graphics.hpp>
+
 #include "button.cpp"
 #include "font.cpp"
 

@@ -1,12 +1,15 @@
 #pragma once
 
+#include <vector>
+#include <random>
+#include <unordered_map>
+#include <utility>
+
 #include "../../Model/filled_box.cpp"
 #include "../../Model/box.cpp"
 #include "../../Model/item.cpp"
 #include "../DataBase/database_queries.cpp"
-#include <vector>
-#include <random>
-#include <unordered_map>
+
 
 class TShopSession {
 private:

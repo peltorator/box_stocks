@@ -1,4 +1,5 @@
 #include <string>
+#include <utility>
 #include <ctime>
 #include <string_view>
 #include <iostream>
@@ -21,6 +22,7 @@
 #include "../DataCash/data_cash.cpp"
 
 INITIALIZE_EASYLOGGINGPP
+
 
 void AddTitle(sf::RenderWindow& window, const std::string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
     sf::Text text;

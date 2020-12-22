@@ -1,7 +1,9 @@
 #pragma once
+
 #include <cmath>
 #include <SFML/Graphics.hpp>
 #include <string>
+
 #include "font.cpp"
 
 struct TButton {
