@@ -1,4 +1,4 @@
-#include "../Shop/shop.cpp"
+#include "../Shop_session/shop_session.cpp"
 #include "../DataBase/database.cpp"
 #include "../DataBase/database_queries.cpp"
 #include "../../Helper/helper_functions.cpp"
@@ -61,23 +61,23 @@ extern "C" {
         NDataBase::Open("db.sqlite");
     }
 
-    TShop* MakeShop() {
-        return new TShop;
+    TShopSession* MakeShop() {
+        return new TShopSession;
     }
 
-    void DeleteShop(TShop* shop) {
+    void DeleteShop(TShopSession* shop) {
         delete shop;
     }
 
-    void AddItemToShop(TShop* shop, const uint64_t itemID) {
+    void AddItemToShop(TShopSession* shop, const uint64_t itemID) {
         shop->AddItem(itemID);
     }
 
-    void DeleteItemFromShop(TShop* shop, const uint64_t itemID) {
+    void DeleteItemFromShop(TShopSession* shop, const uint64_t itemID) {
         shop->DeleteItem(itemID);
     }
     
-    const char* BuyOrderToString(TShop* shop) {
+    const char* BuyOrderToString(TShopSession* shop) {
         std::vector<TFilledBox> order = (*shop).Buy();
         std::stringstream s;
         s << order.size() << "\n";
@@ -89,7 +89,7 @@ extern "C" {
         return chars;
     }
 
-    int32_t ShopOrderIsEmpty(TShop* shop) {
+    int32_t ShopOrderIsEmpty(TShopSession* shop) {
         return shop->OrderIsEmpty();
     }
 

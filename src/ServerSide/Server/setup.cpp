@@ -4,6 +4,7 @@
 #include <map>
 #include <algorithm>
 #include "../DataBase/database.cpp"
+#include "../../Helper/helper_functions.cpp"
 
 using namespace std;
 
@@ -18,19 +19,6 @@ void CreateTables() {
         "create table if not exists ItemsForFilledBox (itemsForFilledBoxID integer primary key, itemID integer, filledBoxID integer, foreign key(itemID) references Items(itemID), foreign key(filledBoxID) references Orders(filledBoxID));\n";
     
     NDataBase::Query(queryDropAndCreateTables);
-}
-
-std::string GetImageBytes(const std::string &filename) {
-    std::ifstream file(filename, std::ios::binary);
-    std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string ans;
-    ans.reserve(bytes.size() << 3);
-    for (size_t i = 0; i < bytes.size(); i++) {
-        for (int j = 7; j >= 0; j--) {
-            ans.push_back(((bytes[i] >> j) & 1) + '0');
-        }
-    }
-    return ans;
 }
 
 void AddElems() {
