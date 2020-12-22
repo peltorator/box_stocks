@@ -4,6 +4,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
+#include "../../../libs/easylogging/easylogging++.cc"
+
 #include "../../Model/order.cpp"
 #include "../../Model/filled_box.cpp"
 #include "../../Model/box.cpp"
@@ -18,6 +20,7 @@
 #include "../HTTP/http_queries.cpp"
 #include "../DataCash/data_cash.cpp"
 
+INITIALIZE_EASYLOGGINGPP
 
 void AddTitle(sf::RenderWindow& window, const std::string& title, const float px = 50.f, const float py = 20.f, const int charSize = 24) {
     sf::Text text;
@@ -449,6 +452,9 @@ void AdminCreateItem(sf::RenderWindow& window) {
                         items.push_back(fakeItem);
                     } else {
                         TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
+                        if (newItem.Image.empty()) {
+                            LOG(ERROR) << "Couldn't load item image from a file";
+                        }
                         items.push_back(newItem);
                         const uint64_t newItemID = NHttp::InsertItem(newItem);
                         newItem.ItemID = newItemID;
@@ -655,6 +661,9 @@ void AdminCreateBox(sf::RenderWindow& window) {
                         boxes.push_back(fakeBox);
                     } else {
                         TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
+                        if (newBox.Image.empty()) {
+                            LOG(ERROR) << "Couldn't load box image from a file";
+                        }
                         boxes.push_back(newBox);
                         const uint64_t newBoxID = NHttp::InsertBox(newBox);
                         newBox.BoxID = newBoxID;
@@ -848,10 +857,16 @@ void ChooseMode(sf::RenderWindow& window) {
     }
 }
 
-int main() {
-    NFont::GetFont();
+int main(int argc, char* argv[]) {
+    START_EASYLOGGINGPP(argc, argv);
+    el::Configurations conf("logging_config.cfg");
+    el::Loggers::reconfigureAllLoggers(conf);
+
+    NFont::LoadFont();
+
     NDataCash::LoadItems();
     NDataCash::LoadBoxes();
+
     sf::RenderWindow window(sf::VideoMode(1400, 800), "Shop");
     ChooseMode(window);
     window.close();

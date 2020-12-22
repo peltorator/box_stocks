@@ -3,6 +3,9 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+
+#include "../../../libs/easylogging/easylogging++.cc"
+
 #include "../../Model/filled_box.cpp"
 #include "../../Model/box.cpp"
 #include "../../Model/item.cpp"
@@ -16,10 +19,11 @@ namespace NHttp {
 
     std::string DecodeImage(const std::string &s) {
         std::string bytes;
-        bytes.reserve(s.size() >> 3);
-        for (size_t i = 0; i < s.size(); i += 8) {
+        const size_t BYTE_SZ = 8;
+        bytes.reserve(s.size() / BYTE_SZ);
+        for (size_t i = 0; i < s.size(); i += BYTE_SZ) {
             char c = 0;
-            for (int j = i; j < i + 8; j++) {
+            for (size_t j = i; j < i + BYTE_SZ; j++) {
                 c = (c << 1) | (s[j] - '0');
             }
             bytes.push_back(c);
@@ -29,6 +33,10 @@ namespace NHttp {
 
     std::vector<std::pair<TBox, uint32_t>> GetBoxes() {
         auto res = cli.Get("/get_boxes");
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't load boxes from the server";
+            return {};
+        }
         std::stringstream body(res->body);
         std::vector<std::pair<TBox, uint32_t>> boxes;
         int boxesSize;
@@ -44,7 +52,7 @@ namespace NHttp {
     }
 
     std::vector<TBox> GetAvailableBoxes() {
-        std::vector<std::pair<TBox, uint32_t>> allBoxes;
+        std::vector<std::pair<TBox, uint32_t>> allBoxes = GetBoxes();
         std::vector<TBox> availableBoxes;
         for (const auto& [box, amount] : allBoxes) {
             if (amount > 0) {
@@ -56,6 +64,10 @@ namespace NHttp {
 
     std::vector<std::pair<TItem, uint32_t>> GetItems() {
         auto res = cli.Get("/get_items");
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't load items from the server";
+            return {};
+        }
         std::stringstream body(res->body);
         std::vector<std::pair<TItem, uint32_t>> items;
         int itemsSize;
@@ -72,14 +84,26 @@ namespace NHttp {
 
     void AddItem(const uint64_t itemID) {
         auto res = cli.Get(("/add_item/" + std::to_string(itemID)).c_str());
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't add an item to the server";
+            return;
+        }
     }
 
     void DeleteItem(const uint64_t itemID) {
         auto res = cli.Get(("/delete_item/" + std::to_string(itemID)).c_str());
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't delete an item from the server";
+            return;
+        }
     }
 
     bool OrderIsEmpty() {
         auto res = cli.Get("/order_is_empty");
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't load 'order_is_empty' info from the server";
+            return true;
+        }
         std::stringstream body(res->body);
         int ans;
         body >> ans;
@@ -88,6 +112,10 @@ namespace NHttp {
 
     std::vector<TFilledBox> ShopBuy() {
         auto res = cli.Get("/buy");
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't buy from the server";
+            return {};
+        }
         std::stringstream body(res->body);
         std::vector<TFilledBox> order;
         int orderSize;
@@ -120,32 +148,55 @@ namespace NHttp {
             }
         }
         auto res = cli.Get(path.str().c_str());
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't save an order to the server";
+            return;
+        }
     }
 
     void UpdateItems(const std::vector<std::pair<uint64_t, int32_t>>& items) {
         for (const auto& [itemID, amount] : items) {
             auto res = cli.Get(("/update_item/" + std::to_string(itemID) + "/" + std::to_string(amount)).c_str());
+            if (res == nullptr) {
+                LOG(ERROR) << "Can't update an item on the server";
+            }
         }
     }
 
     uint64_t InsertItem(const TItem& item) {
         auto res = cli.Get(("/insert_item/" + item.ItemName + "/" + std::to_string(item.Weight) + "/" + std::to_string(item.Volume) + "/" + std::to_string(item.Cost) + "/" + item.Image).c_str());
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't insert a new item to the server";
+            return 0;
+        }
         return ToInt(res->body);
     }
 
     void UpdateBoxes(const std::vector<std::pair<uint64_t, int32_t>>& boxes) {
         for (const auto& [boxID, amount] : boxes) {
             auto res = cli.Get(("/update_box" + std::to_string(boxID) + "/" + std::to_string(amount)).c_str());
+            if (res == nullptr) {
+                LOG(ERROR) << "Can't update boxes on the server";
+                return;
+            }
         }
     }
 
     uint64_t InsertBox(const TBox& box) {
         auto res = cli.Get(("/insert_box/" + box.BoxName + "/" + std::to_string(box.MaxWeight) + "/" + std::to_string(box.MaxVolume) + "/" + std::to_string(box.Cost) + "/" + box.Image).c_str());
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't insert a new box to the server";
+            return 0;
+        }
         return ToInt(res->body);
     }
 
     std::vector<TOrder> GetOrders() {
         auto res = cli.Get("/get_orders");
+        if (res == nullptr) {
+            LOG(ERROR) << "Can't get orders from the server";
+            return {};
+        }
         std::stringstream body(res->body);
         std::vector<TOrder> orders;
         int ordersSize;
