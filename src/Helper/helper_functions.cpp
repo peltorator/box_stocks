@@ -44,11 +44,15 @@ int64_t ToInt(const std::string& s) {
 
 std::string GetImageBytes(const std::string &filename) {
     std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        return "";
+    }
     std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string ans;
-    ans.reserve(bytes.size() << 3);
+    const size_t BYTE_SZ = 8;
+    ans.reserve(bytes.size() * BYTE_SZ);
     for (size_t i = 0; i < bytes.size(); i++) {
-        for (int j = 7; j >= 0; j--) {
+        for (int j = BYTE_SZ - 1; j >= 0; j--) {
             ans.push_back(((bytes[i] >> j) & 1) + '0');
         }
     }
