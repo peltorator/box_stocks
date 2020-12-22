@@ -1,8 +1,12 @@
-#include "shop.h"
+#include "shop_session.h"
 
-TShop::TShop() {
-    std::vector<std::pair<TItem, uint32_t>> itemAmounts = GetItems();
+TShopSession::TShopSession(std::vector<std::pair<TItem, uint32_t>> itemAmounts, std::vector<TBox> boxes) {
+#ifdef TEST
+    _boxes = boxes;
+#else
+    itemAmounts = GetItems();
     _boxes = GetAvailableBoxes();
+#endif
     for (const auto& [item, amount] : itemAmounts) {
         _items[item.ItemID] = item;
         _availableAmounts[item.ItemID] = amount;
@@ -10,17 +14,17 @@ TShop::TShop() {
     _rnd = std::mt19937(0);
 }
 
-void TShop::AddItem(const uint64_t itemID, const uint32_t amount) {
+void TShopSession::AddItem(const uint64_t itemID, const uint32_t amount) {
     _orderAmounts[itemID] += amount;
     _availableAmounts[itemID] -= amount;
 }
 
-void TShop::DeleteItem(const uint64_t itemID, const uint32_t amount) {
+void TShopSession::DeleteItem(const uint64_t itemID, const uint32_t amount) {
     _orderAmounts[itemID] -= amount;
     _availableAmounts[itemID] += amount;
 }
 
-std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<TItem>& items) {
+std::pair<uint64_t, std::vector<TFilledBox>> TShopSession::PackSmall(const std::vector<TItem>& items) {
     const uint64_t DP_SIZE = (1LL << items.size());
     std::vector<uint64_t> totalWeight(DP_SIZE, 0);
     std::vector<uint64_t> totalVolume(DP_SIZE, 0);
@@ -73,7 +77,7 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShop::PackSmall(const std::vector<
 }
 
 
-std::vector<TFilledBox> TShop::Buy() {
+std::vector<TFilledBox> TShopSession::Buy() {
     std::vector<TItem> items;
     for (const auto& [itemID, amount] : _orderAmounts) {
         for (uint32_t ind = 0; ind < amount; ind++) {
@@ -106,14 +110,16 @@ std::vector<TFilledBox> TShop::Buy() {
             bestFilledBoxes = curFilledBoxes;
         }
     }
+#ifndef TEST
     for (const TItem& item : items) {
         UpdateItem(item.ItemID, -1);
     }
     SaveOrder(bestFilledBoxes);
+#endif
     return bestFilledBoxes;
 }
 
-bool TShop::OrderIsEmpty() const {
+bool TShopSession::OrderIsEmpty() const {
     for (const auto& [itemId, amount] : _orderAmounts) {
         if (amount > 0) {
             return false;

@@ -8,7 +8,7 @@
 #include <random>
 #include <unordered_map>
 
-class TShop {
+class TShopSession {
 private:
     std::vector<TBox> _boxes;
     std::unordered_map<uint64_t, TItem> _items;
@@ -22,7 +22,7 @@ private:
     
     std::pair<uint64_t, std::vector<TFilledBox>> PackSmall(const std::vector<TItem>& items);
 public:
-    TShop();
+    TShopSession(std::vector<std::pair<TItem, uint32_t>> itemAmounts = {}, std::vector<TBox> = {});
 
     void AddItem(const uint64_t itemID, const uint32_t amount = 1);
 
