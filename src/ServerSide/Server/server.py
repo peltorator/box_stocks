@@ -41,8 +41,6 @@ print('Opened db')
 shop = libc.MakeShop()
 print('made shop')
 
-sleep(1)
-
 print('Ready!')
 
 
@@ -106,8 +104,6 @@ class HandleRequests(BaseHTTPRequestHandler):
             content = libc.DBGetOrders().decode('utf-8')
         else:
             content = 'undefined query'
-        #print('Response content: ', content)
-
         self._set_headers()
         self.wfile.write(content.encode('utf-8'))
 
@@ -125,5 +121,5 @@ class HandleRequests(BaseHTTPRequestHandler):
 
 HTTPServer(('localhost', 8080), HandleRequests).serve_forever()
 
-# usage: http://localhost:8080/todo/23
+# usage: http://localhost:8080/get_orders
 

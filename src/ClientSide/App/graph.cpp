@@ -753,7 +753,7 @@ void ShowHistory(sf::RenderWindow& window) {
         orderButtons[i] = TButton(0.f, 0.f, 1300.f, 50.f, "Order # " + std::to_string(orders[i].OrderID) + "\t\tUser: " + orders[i].UserName + "\t\tOrder Date: " + orders[i].OrderDate);
     }
 
-    std::vector<TBox> availableBoxes = NHttp::GetAvailableBoxes();
+    std::vector<TBox>& availableBoxes = NDataCash::AvailableBoxes;
 
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
     TButton leftButton(25.f, 60.f, 25.f, 25.f, "<");

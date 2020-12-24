@@ -41,14 +41,14 @@ void AddElems() {
             string imagePath;
             in >> itemName >> weight >> volume >> cost >> quantity >> imagePath;
             
-            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(cost) + ", " + to_string(quantity) + ", '" + GetImageBytes("../../assets/images/" + imagePath) + "'),";
+            queryInsertItems += " ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(cost) + ", " + to_string(quantity) + ", '" + GetImageBytes("../../../assets/images/" + imagePath) + "'),";
         } else if (type == "AddBox") {
             string boxName;
             uint64_t maxWeight, maxVolume, cost;
             string imagePath;
             in >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
 
-            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../../assets/images/" + imagePath) + "'),";
+            queryInsertBoxes += " ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes("../../../assets/images/" + imagePath) + "'),";
         }
     }
 
@@ -57,9 +57,6 @@ void AddElems() {
 
     NDataBase::Query(queryInsertItems);
     NDataBase::Query(queryInsertBoxes);
-
-    // string queryInsertUsers = "insert into Users(userID, userName) values (1, 'peltorator');";
-    // NDataBase::Query(queryInsertUsers);
 }
 
 int main() {

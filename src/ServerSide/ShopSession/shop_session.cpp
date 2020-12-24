@@ -57,7 +57,7 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShopSession::PackSmall(const std::
     uint64_t currentMask = DP_SIZE - 1;
     uint64_t cost = minCost[currentMask];
 
-    if (cost == _INF_COST) {
+    if (cost == _INF_COST) { // какой-то товар не влез ни в одну коробку
         return {cost, vectorOfBoxes};
     }
 
@@ -97,7 +97,7 @@ std::vector<TFilledBox> TShopSession::Buy() {
                 curItems.push_back(items[j]);
             }
             const auto& [cost, boxes] = PackSmall(curItems);
-            if (cost == _INF_COST) {
+            if (cost == _INF_COST) { // какой-то товар не влез ни в одну коробку
                 return std::vector<TFilledBox>();
             }
             curCost += cost;

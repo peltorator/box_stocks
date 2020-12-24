@@ -67,7 +67,6 @@ std::map<uint64_t, TItem> GetItemsMap() {
 }
 
 std::vector<std::pair<TBox, uint32_t>> GetBoxes() {
-    
     std::string getBoxesQuery = "select * from Box;";
     std::vector<std::pair<TBox, uint32_t>> boxes;
     auto boxesRaw = NDataBase::Query(getBoxesQuery);
@@ -78,7 +77,6 @@ std::vector<std::pair<TBox, uint32_t>> GetBoxes() {
 }
 
 std::vector<TBox> GetAvailableBoxes() {
-    
     std::string getBoxesQuery = "select * from Box;";
     std::vector<TBox> boxes;
     auto boxesRaw = NDataBase::Query(getBoxesQuery);
