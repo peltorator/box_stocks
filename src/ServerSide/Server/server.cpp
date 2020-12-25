@@ -29,26 +29,6 @@ std::string BoxToString(const TBox& box, const uint32_t amount) {
     return s.str();
 }
 
-std::vector<uint64_t> ParsePath(const std::string& s) {
-    std::vector<uint64_t> vals;
-    std::string curStr = "";
-    size_t i = 1;
-    while (s[i] != '/') {
-        i++;
-    }
-    for (; i < s.size(); i++) {
-        if (s[i] == '/') {
-            if (!curStr.empty()) {
-                vals.push_back(ToInt(curStr));
-                curStr = "";
-            }
-        } else {
-            curStr.push_back(s[i]);
-        }
-    }
-    return vals;
-}
-
 std::string OrderToString(const TOrder& order) {
     std::stringstream s;
     s << order.OrderID << " " << order.UserID << " " << order.UserName << " " << order.OrderDate << "\n";
@@ -104,14 +84,6 @@ extern "C" {
         UpdateBox(boxID, amount);
     }
 
-    uint64_t DBInsertItem(const char* itemName, const uint64_t weight, const uint64_t volume, const uint64_t cost, const char* image) {
-        return InsertItem(std::string(itemName), weight, volume, cost, std::string(image));
-    }
-
-    uint64_t DBInsertBox(const char* boxName, const uint64_t maxWeight, const uint64_t maxVolume, const uint64_t cost, const char* image) {
-        return InsertBox(std::string(boxName), maxWeight, maxVolume, cost, std::string(image));
-    }
-
     const char* DBGetItems() {
         std::vector<std::pair<TItem, uint32_t>> items = GetItems();
         std::stringstream s;
@@ -147,6 +119,4 @@ extern "C" {
         strcpy(chars, s.str().c_str());
         return chars;
     }
-
-    
 }

@@ -59,12 +59,61 @@ void AddElems() {
     NDataBase::Query(queryInsertBoxes);
 }
 
+void CustomSetup() {
+    while (true) {
+        cout << "\nif you want to create new item print \"AddItem <itemName> <weight> <volume> <cost> <imagePath>\"\n";
+        cout << "if you want to create new box print \"AddBox <boxName> <maxWeight> <maxVolume> <cost> <imagePath>\"\n";
+        cout << "if you want to finish print \"quit\"" << endl;
+        string type;
+        cin >> type;
+        if (type == "AddItem") {
+            string itemName;
+            uint64_t weight, volume, cost;
+            uint32_t quantity;
+            string imagePath;
+            cin >> itemName >> weight >> volume >> cost >> imagePath;
+            
+            string queryInsertItem =  "insert into Item(itemName, weight, volume, cost, amount, image) values ('" + itemName + "', " + to_string(weight) + ", " + to_string(volume) + ", " + to_string(cost) + ", 0, '" + GetImageBytes(imagePath) + "');";
+             NDataBase::Query(queryInsertItem);
+             cout << "\nItem added successfully" << endl;
+        } else if (type == "AddBox") {
+            string boxName;
+            uint64_t maxWeight, maxVolume, cost;
+            string imagePath;
+            cin >> boxName >> maxWeight >> maxVolume >> cost >> imagePath;
+
+            string queryInsertBox = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values ('" + boxName + "', " + to_string(maxWeight) + ", " + to_string(maxVolume) + ", " + to_string(cost) + ", 1, '" + GetImageBytes(imagePath) + "'),";
+            NDataBase::Query(queryInsertBox);
+            cout << "\nBox added successfully" << endl;
+        } else if (type == "quit") {
+            break;
+        } else {
+            cout << "\nunknown type. try again." << endl;
+        }
+    }
+}
+
 int main() {
     NDataBase::Open("db.sqlite");
 
-    CreateTables();
-    AddElems();
-
+    while (true) {
+        cout << "\nwhat setup do you want? \"default\" or \"custom\"?" << endl;
+        string response;
+        cin >> response;
+        if (response == "default") {
+            CreateTables();
+            AddElems();
+            break;
+        } else if (response == "custom") {
+            CustomSetup();
+            break;
+        } else if (response == "quit") {
+            break;
+        } else {
+            cout << "\nunknown mode. try again. if you want to quit print \"quit\"." << endl;
+        }
+    }
+    cout << "done!" << endl;
     NDataBase::Close();
     return 0;
 }

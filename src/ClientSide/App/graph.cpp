@@ -392,108 +392,6 @@ void AdminAddDeleteItem(sf::RenderWindow& window) {
     NHttp::UpdateItems(newItems);
 }
 
-std::string GetItemsString(const std::vector<TItem>& items) {
-    std::string ans = "Your new items:\nName\tWeight\tVolume";
-    for (const TItem& item : items) {
-        ans += "\n" + item.ItemName + "\t\t\t" + std::to_string(item.Weight) + "\t\t\t" + std::to_string(item.Volume) + "\t\t\t" + std::to_string(item.Cost);
-    }
-    return ans;
-}
-
-void AdminCreateItem(sf::RenderWindow& window) {
-    static TItem fakeItem(0, "already exists!", 0, 0, 0);
-    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    TTextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TTextField weightField(330.f, 550.f, 100.f, 50.f, "Weight");
-    TTextField volumeField(560.f, 550.f, 100.f, 50.f, "Volume");
-    TTextField costField(790.f, 550.f, 100.f, 50.f, "Cost");
-    TTextField imageField(1020.f, 550.f, 100.f, 50.f, "Image Path");
-    TButton addButton(1250.f, 550.f, 100.f, 50.f, "Add");
-    std::string selected = "name";
-    std::vector<TItem> items;
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
-                if (selected == "name") {
-                    nameField.PopChar();
-                } else if (selected == "weight") {
-                    weightField.PopChar();
-                } else if (selected == "volume") {
-                    volumeField.PopChar();
-                } else if (selected == "cost") {
-                    costField.PopChar();
-                } else if (selected == "image") {
-                    imageField.PopChar();
-                }
-            } else if (event.type == sf::Event::TextEntered) {
-                if (event.text.unicode < 128) {
-                    char c = static_cast<char>(event.text.unicode);
-                    if (selected == "name") {
-                        nameField.AddChar(c);
-                    } else if (selected == "weight") {
-                        weightField.AddChar(c);
-                    } else if (selected == "volume") {
-                        volumeField.AddChar(c);
-                    } else if (selected == "cost") {
-                        costField.PopChar();
-                    } else if (selected == "image") {
-                        imageField.AddChar(c);
-                    }
-                }
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-                if (goBackButton.IsIn(px, py)) {
-                    return;
-                } else if (addButton.IsIn(px, py)) {
-                    if (NDataCash::CheckIfItemExists(nameField.Label)) {
-                        items.push_back(fakeItem);
-                    } else {
-                        TItem newItem(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
-                        if (newItem.Image.empty()) {
-                            LOG(ERROR) << "Couldn't load item image from a file";
-                        }
-                        items.push_back(newItem);
-                        const uint64_t newItemID = NHttp::InsertItem(newItem);
-                        newItem.ItemID = newItemID;
-                        NDataCash::AddNewItem(newItem);
-                    }
-                    nameField.Clear();
-                    weightField.Clear();
-                    volumeField.Clear();
-                    imageField.Clear();
-                } else if (nameField.IsIn(px, py)) {
-                    selected = "name";
-                } else if (weightField.IsIn(px, py)) {
-                    selected = "weight";
-                } else if (volumeField.IsIn(px, py)) {
-                    selected = "volume";
-                } else if (costField.IsIn(px, py)) {
-                    selected = "cost";
-                } else if (imageField.IsIn(px, py)) {
-                    selected = "image";
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Enter items:");
-        AddTitle(window, GetItemsString(items), 100.f, 100.f, 20);
-        goBackButton.Draw(window);
-        addButton.Draw(window);
-        nameField.Draw(window);
-        weightField.Draw(window);
-        volumeField.Draw(window);
-        costField.Draw(window);
-        imageField.Draw(window);
-        window.display();
-    }
-}
-
 void AdminAddDeleteBox(sf::RenderWindow& window) {
     const std::vector<std::pair<TBox, uint32_t>>& boxes = NDataCash::Boxes;
     std::vector<std::pair<uint64_t, int32_t>> newBoxes(boxes.size());
@@ -601,115 +499,9 @@ void AdminAddDeleteBox(sf::RenderWindow& window) {
     }
 }
 
-std::string GetBoxesString(const std::vector<TBox>& boxes) {
-    std::string ans = "Your new boxes:\nName\tMaxWeight\tMaxVolume\tCost";
-    for (const TBox& box : boxes) {
-        ans += "\n" + box.BoxName + "\t\t\t" + std::to_string(box.MaxWeight) + "\t\t\t" + std::to_string(box.MaxVolume) + "\t\t\t" + std::to_string(box.Cost);
-    }
-    return ans;
-}
-
-void AdminCreateBox(sf::RenderWindow& window) {
-    static TBox fakeBox(0, "already exists!", 0, 0, 0);
-    TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
-    TTextField nameField(100.f, 550.f, 100.f, 50.f, "Name");
-    TTextField weightField(300.f, 550.f, 100.f, 50.f, "MaxWeight");
-    TTextField volumeField(500.f, 550.f, 100.f, 50.f, "MaxVolume");
-    TTextField costField(700.f, 550.f, 100.f, 50.f, "Cost");
-    TTextField imageField(900.f, 550.f, 100.f, 50.f, "Image Path");
-    TButton addButton(1100.f, 550.f, 100.f, 50.f, "Add");
-    std::string selected = "name";
-    std::vector<TBox> boxes;
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace)) {
-                if (selected == "name") {
-                    nameField.PopChar();
-                } else if (selected == "weight") {
-                    weightField.PopChar();
-                } else if (selected == "volume") {
-                    volumeField.PopChar();
-                } else if (selected == "cost") {
-                    costField.PopChar();
-                } else if (selected == "image") {
-                    imageField.PopChar();
-                }
-            } else if (event.type == sf::Event::TextEntered) {
-                if (event.text.unicode < 128) {
-                    char c = static_cast<char>(event.text.unicode);
-                    if (selected == "name") {
-                        nameField.AddChar(c);
-                    } else if (selected == "weight") {
-                        weightField.AddChar(c);
-                    } else if (selected == "volume") {
-                        volumeField.AddChar(c);
-                    } else if (selected == "cost") {
-                        costField.AddChar(c);
-                    } else if (selected == "image") {
-                        imageField.AddChar(c);
-                    }
-                }
-            } else if (event.type == sf::Event::MouseButtonPressed) {
-                float px = event.mouseButton.x;
-                float py = event.mouseButton.y;
-                if (goBackButton.IsIn(px, py)) {
-                    return;
-                } else if (addButton.IsIn(px, py)) {
-                    if (NDataCash::CheckIfBoxExists(nameField.Label)) {
-                        boxes.push_back(fakeBox);
-                    } else {
-                        TBox newBox(0, nameField.Label, ToInt(weightField.Label), ToInt(volumeField.Label), ToInt(costField.Label), GetImageBytes(imageField.Label));
-                        if (newBox.Image.empty()) {
-                            LOG(ERROR) << "Couldn't load box image from a file";
-                        }
-                        boxes.push_back(newBox);
-                        const uint64_t newBoxID = NHttp::InsertBox(newBox);
-                        newBox.BoxID = newBoxID;
-                        NDataCash::AddNewBox(newBox);
-                    }
-                    nameField.Clear();
-                    weightField.Clear();
-                    volumeField.Clear();
-                    costField.Clear();
-                    imageField.Clear();
-                } else if (nameField.IsIn(px, py)) {
-                    selected = "name";
-                } else if (weightField.IsIn(px, py)) {
-                    selected = "weight";
-                } else if (volumeField.IsIn(px, py)) {
-                    selected = "volume";
-                } else if (costField.IsIn(px, py)) {
-                    selected = "cost";
-                } else if (imageField.IsIn(px, py)) {
-                    selected = "image";
-                }
-            }
-        }
-
-        window.clear();
-        AddTitle(window, "Enter boxes:");
-        AddTitle(window, GetBoxesString(boxes), 100.f, 100.f, 20);
-        goBackButton.Draw(window);
-        addButton.Draw(window);
-        nameField.Draw(window);
-        weightField.Draw(window);
-        volumeField.Draw(window);
-        costField.Draw(window);
-        imageField.Draw(window);
-        window.display();
-    }
-
-}
-
 void AdminMode(sf::RenderWindow& window) {
-    TButton addItemButton(350.f, 100.f, 200.f, 100.f, "Add/Delete Items");
-    TButton createItemButton(350.f, 300.f, 200.f, 100.f, "Create New Item");
-    TButton addBoxButton(850.f, 100.f, 200.f, 100.f, "Add/Delete Boxes");
-    TButton createBoxButton(850.f, 300.f, 200.f, 100.f, "Create New Box");
+    TButton addItemButton(350.f, 350.f, 200.f, 100.f, "Add/Delete Items");
+    TButton addBoxButton(850.f, 350.f, 200.f, 100.f, "Add/Delete Boxes");
     TButton goBackButton(50.f, 700.f, 100.f, 50.f, "Go Back");
 
     while (window.isOpen()) {
@@ -723,12 +515,8 @@ void AdminMode(sf::RenderWindow& window) {
 
                 if (addItemButton.IsIn(px, py)) {
                     AdminAddDeleteItem(window);
-                } else if (createItemButton.IsIn(px, py)) {
-                    AdminCreateItem(window);
                 } else if (addBoxButton.IsIn(px, py)) {
                     AdminAddDeleteBox(window);
-                } else if (createBoxButton.IsIn(px, py)) {
-                    AdminCreateBox(window);
                 } else if (goBackButton.IsIn(px, py)) {
                     return;
                 }
@@ -738,9 +526,7 @@ void AdminMode(sf::RenderWindow& window) {
         window.clear();
         AddTitle(window, "Choose action:");
         addItemButton.Draw(window);
-        createItemButton.Draw(window);
         addBoxButton.Draw(window);
-        createBoxButton.Draw(window);
         goBackButton.Draw(window);
         window.display();
     }

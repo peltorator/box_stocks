@@ -139,22 +139,6 @@ namespace NHttp {
         return order;
     }
 
-    void SaveOrder(const std::vector<TFilledBox>& order) {
-        std::stringstream path;
-        path << "/save_order/" << order.size();
-        for (const TFilledBox& filledBox : order) {
-            path << "/" << filledBox.BoxID << "/" << filledBox.ItemIDs.size();
-            for (const uint64_t& itemID : filledBox.ItemIDs) {
-                path << "/" << itemID;
-            }
-        }
-        auto res = cli.Get(path.str().c_str());
-        if (res == nullptr) {
-            LOG(ERROR) << "Can't save an order to the server";
-            return;
-        }
-    }
-
     void UpdateItems(const std::vector<std::pair<uint64_t, int32_t>>& items) {
         for (const auto& [itemID, amount] : items) {
             if (amount != 0) {
@@ -164,15 +148,6 @@ namespace NHttp {
                 }
             }
         }
-    }
-
-    uint64_t InsertItem(const TItem& item) {
-        auto res = cli.Get(("/insert_item/" + item.ItemName + "/" + std::to_string(item.Weight) + "/" + std::to_string(item.Volume) + "/" + std::to_string(item.Cost) + "/" + item.Image).c_str());
-        if (res == nullptr) {
-            LOG(ERROR) << "Can't insert a new item to the server";
-            return 0;
-        }
-        return ToInt(res->body);
     }
 
     void UpdateBoxes(const std::vector<std::pair<uint64_t, int32_t>>& boxes) {
@@ -185,15 +160,6 @@ namespace NHttp {
                 }
             }
         }
-    }
-
-    uint64_t InsertBox(const TBox& box) {
-        auto res = cli.Get(("/insert_box/" + box.BoxName + "/" + std::to_string(box.MaxWeight) + "/" + std::to_string(box.MaxVolume) + "/" + std::to_string(box.Cost) + "/" + box.Image).c_str());
-        if (res == nullptr) {
-            LOG(ERROR) << "Can't insert a new box to the server";
-            return 0;
-        }
-        return ToInt(res->body);
     }
 
     std::vector<TOrder> GetOrders() {
