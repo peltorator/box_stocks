@@ -1,8 +1,9 @@
 from ctypes import *
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from time import sleep
 
 libc = CDLL("server.so")
+
+libc.LogMessage.argtypes = [c_char_p]
 
 libc.MakeShop.restype = c_void_p
 
@@ -30,6 +31,7 @@ libc.DBGetOrders.restype = c_char_p
 
 
 print('Start')
+libc.ConfigureLogger()
 libc.OpenDataBase()
 print('Opened db')
 shop = libc.MakeShop()
@@ -74,7 +76,6 @@ class HandleRequests(BaseHTTPRequestHandler):
             amount = int(args[2])
             libc.DBUpdateBox(boxID, amount)
         elif qtype == 'get_items':
-            print(libc.DBGetItems())
             content = libc.DBGetItems().decode('utf-8')
         elif qtype == 'get_boxes':
             content = libc.DBGetBoxes().decode('utf-8')
@@ -83,6 +84,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         elif qtype == 'get_orders':
             content = libc.DBGetOrders().decode('utf-8')
         else:
+            libc.LogMessage('Got undefined query: {0}'.format(qtype).encode('utf-8'))
             content = 'undefined query'
         self._set_headers()
         self.wfile.write(content.encode('utf-8')) 

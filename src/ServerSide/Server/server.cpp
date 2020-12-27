@@ -1,11 +1,14 @@
 #include <sstream>
 #include <utility>
 
+#include "../../../libs/easylogging/easylogging++.cc"
+
 #include "../ShopSession/shop_session.cpp"
 #include "../DataBase/database.cpp"
 #include "../DataBase/database_queries.cpp"
 #include "../../Helper/helper_functions.cpp"
 
+INITIALIZE_EASYLOGGINGPP
 
 std::string FilledBoxToString(const TFilledBox& filledBox) {
     std::stringstream s;
@@ -40,6 +43,15 @@ std::string OrderToString(const TOrder& order) {
 }
 
 extern "C" {
+    void ConfigureLogger() {
+        el::Configurations conf("server_logging_config.cfg");
+        el::Loggers::reconfigureAllLoggers(conf);
+    }
+
+    void LogMessage(const char* c) {
+        LOG(ERROR) << std::string(c);
+    }
+
     void OpenDataBase() {
         NDataBase::Open("db.sqlite");
     }
