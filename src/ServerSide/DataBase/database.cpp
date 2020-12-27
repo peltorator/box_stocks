@@ -6,6 +6,7 @@
 #include <map>
 
 #include "../../../libs/sqlite/sqlite3.h"
+#include "../../../libs/easylogging/easylogging++.cc"
 
 namespace NDataBase {
     sqlite3* db = nullptr;
@@ -26,6 +27,7 @@ namespace NDataBase {
 
     void Open(const std::string path) {
         if (sqlite3_open(path.c_str(), &db)) {
+            LOG(ERROR) << "Can't open database: " << sqlite3_errmsg(db);
             std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
             Close();
         }
@@ -35,6 +37,7 @@ namespace NDataBase {
         values.clear();
         char *zErrMsg = 0;
         if (sqlite3_exec(db, query.c_str(), callback, 0, &zErrMsg) != SQLITE_OK) {
+            LOG(ERROR) << "SQL error: " << zErrMsg;
             std::cerr << "SQL error: " << zErrMsg << std::endl;
             sqlite3_free(zErrMsg);
         }

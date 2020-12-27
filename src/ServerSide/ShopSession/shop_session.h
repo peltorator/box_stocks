@@ -23,7 +23,7 @@ private:
     const size_t _PARTITIONS = 10;
     const size_t _MAX_ITEMS_IN_BLOCK = 12;
     
-    std::pair<uint64_t, std::vector<TFilledBox>> PackSmall(const std::vector<TItem>& items);
+    std::pair<uint64_t, std::vector<TFilledBox>> PackSmall(const std::vector<TItem>& items, const std::set<uint64_t>& availableBoxIDs);
 public:
     TShopSession(std::vector<std::pair<TItem, uint32_t>> itemAmounts = {}, std::vector<TBox> = {});
 

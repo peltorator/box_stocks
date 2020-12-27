@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <set>
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -86,6 +87,22 @@ std::vector<TBox> GetAvailableBoxes() {
         }
     }
     return boxes;
+}
+
+std::set<uint64_t> GetAvailableBoxIDs() {
+    std::string getBoxesQuery = "select boxID, available from Box;";
+    std::set<uint64_t> boxIDs;
+    auto boxesRaw = NDataBase::Query(getBoxesQuery);
+    for (auto& dict : boxesRaw) {
+        std::cerr << "------\n";
+        for (auto [x, y] : dict) {
+            std::cerr << x << ' ' << y << std::endl;
+        }
+        if (ToInt(dict["available"])) {
+            boxIDs.insert(ToInt(dict["boxID"]));
+        }
+    }
+    return boxIDs;
 }
 
 std::map<uint64_t, TBox> GetBoxesMap() {

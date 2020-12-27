@@ -24,7 +24,7 @@ void TShopSession::DeleteItem(const uint64_t itemID, const uint32_t amount) {
     _availableAmounts[itemID] += amount;
 }
 
-std::pair<uint64_t, std::vector<TFilledBox>> TShopSession::PackSmall(const std::vector<TItem>& items) {
+std::pair<uint64_t, std::vector<TFilledBox>> TShopSession::PackSmall(const std::vector<TItem>& items, const std::set<uint64_t>& availableBoxIDs) {
     const uint64_t DP_SIZE = (1LL << items.size());
     std::vector<uint64_t> totalWeight(DP_SIZE, 0);
     std::vector<uint64_t> totalVolume(DP_SIZE, 0);
@@ -41,6 +41,9 @@ std::pair<uint64_t, std::vector<TFilledBox>> TShopSession::PackSmall(const std::
         }
         for (uint64_t subMask = mask; subMask > 0; subMask = (subMask - 1) & mask) {
             for (size_t boxIndex = 0; boxIndex < _boxes.size(); boxIndex++) {
+                if (!availableBoxIDs.count(_boxes[boxIndex].BoxID)) {
+                    continue;
+                }
                 const TBox& box = _boxes[boxIndex];
                 if (totalWeight[subMask] <= box.MaxWeight && totalVolume[subMask] <= box.MaxVolume && minCost[mask ^ subMask] != _INF_COST) {
                     uint64_t newCost =  minCost[mask ^ subMask] + box.Cost;
@@ -85,6 +88,9 @@ std::vector<TFilledBox> TShopSession::Buy() {
         }
     }
     _orderAmounts.clear();
+
+    std::set<uint64_t> availableBoxIDs = GetAvailableBoxIDs();
+
     std::vector<TFilledBox> bestFilledBoxes;
     uint64_t bestCost = _INF_COST;
     for (size_t partitionIndex = 0; partitionIndex < _PARTITIONS; partitionIndex++) {
@@ -96,7 +102,7 @@ std::vector<TFilledBox> TShopSession::Buy() {
             for (size_t j = i; j < i + _MAX_ITEMS_IN_BLOCK && j < items.size(); j++) {
                 curItems.push_back(items[j]);
             }
-            const auto& [cost, boxes] = PackSmall(curItems);
+            const auto& [cost, boxes] = PackSmall(curItems, availableBoxIDs);
             if (cost == _INF_COST) { // какой-то товар не влез ни в одну коробку
                 return std::vector<TFilledBox>();
             }
