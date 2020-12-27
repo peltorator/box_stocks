@@ -94,10 +94,6 @@ std::set<uint64_t> GetAvailableBoxIDs() {
     std::set<uint64_t> boxIDs;
     auto boxesRaw = NDataBase::Query(getBoxesQuery);
     for (auto& dict : boxesRaw) {
-        std::cerr << "------\n";
-        for (auto [x, y] : dict) {
-            std::cerr << x << ' ' << y << std::endl;
-        }
         if (ToInt(dict["available"])) {
             boxIDs.insert(ToInt(dict["boxID"]));
         }
