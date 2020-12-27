@@ -153,7 +153,7 @@ namespace NHttp {
     void UpdateBoxes(const std::vector<std::pair<uint64_t, int32_t>>& boxes) {
         for (const auto& [boxID, amount] : boxes) {
             if (amount != 0) {
-                auto res = cli.Get(("/update_box" + std::to_string(boxID) + "/" + std::to_string(amount)).c_str());
+                auto res = cli.Get(("/update_box/" + std::to_string(boxID) + "/" + std::to_string(amount)).c_str());
                 if (res == nullptr) {
                     LOG(ERROR) << "Can't update boxes on the server";
                     return;
