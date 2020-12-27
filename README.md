@@ -5,28 +5,16 @@
 
 Графический интерфейс:
 `g++ -std=c++17 -c graph.cpp && g++ -std=c++17 graph.o -o graph -lsfml-graphics -lsfml-window -lsfml-system && ./graph`
+(для использования графического интерфейса необходимо дополнительно установить себе библиотеку SFML)
 
 Юнит тесты магазина:
 `g++ -std=c++17 tests_shop.cpp -o tests_shop -DTEST -lsqlite3 && ./tests_shop`
 
 Юнит тесты для работы с базами данных:
-`sqlite3 test_db.sqlite < setup.sql && g++ -std=c++17 tests_database.cpp -o tests_database -lsqlite3 && ./tests_database`
+`sqlite3 test_db.sqlite < setup.sql && g++ -std=c++17 tests_database.cpp -DTEST -o tests_database -lsqlite3 && ./tests_database`
 
-# Дорожная карта:
-
-1 неделя: составление дорожной карты, изучение и подбор технологий, создание репозитория, формализация задачи
-
-2 неделя: Настройка всех необходимых библиотек и создание каркаса программы из заглушек
-
-3-4 неделя: Реализация алгоритма + юнит тесты + генерация примеров данных
-
-5 неделя: Реализация консольного интерфейса
-
-6-7 неделя: Реализация графического интерфейса
-
-8 неделя: Сглаживание углов, доработка, тестирование
-
-9-10 неделя: подготовка презентации + буфер времени
+Изначальная настройка магазина (для удобства тестирования и добавления товаров на стороне сервера):
+`g++ -std=c++17 setup.cpp -o setup -lsqlite3 && ./setup`
 
 # Формализация задачи:
 
@@ -76,38 +64,5 @@ minCost[mask] -- минимальная стоимость доставить т
 2. Решения, использующие веса, объемы и деньги в асимптотике не рассматриваются также, потому что даже на самых маленьких корзинах приводят к огромным временным затратам.
 
 # Схема программы:
-
-class Box:
-
-    boxId
-    maxWeight
-    maxVolume
-    cost
-
-class Item:
-
-    itemId
-    weight
-    volume
-
-class FilledBox:
-
-    Box
-    [Item]
-
-class Shop:
-
-    [Box]
-    [Item]
-    Order
-    map: Item -> totalCnt
-    map: Item -> curCnt
-    
-    Init(items, boxes)
-    addItem(itemId)
-    deleteItem(itemId)
-    Buy() -> [FilledBox]
-    Save()
-    Load()
 
 ![](assets/scheme.png)
