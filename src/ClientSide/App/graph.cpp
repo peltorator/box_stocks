@@ -230,11 +230,13 @@ void UserMode(sf::RenderWindow& window) {
                             if (itemTiles[i].MinusButton.IsIn(px, py)) {
                                 if (itemTiles[i].CurCnt > 0) {
                                     itemTiles[i].CurCnt--;
+                                    NDataCash::UpdateItem(items[i].first.ItemID, -1);
                                     NHttp::DeleteItem(items[i].first.ItemID);
                                 }
                             } else if (itemTiles[i].PlusButton.IsIn(px, py)) {
                                 if (itemTiles[i].CurCnt < itemTiles[i].MaxCnt) {
                                     itemTiles[i].CurCnt++;
+                                    NDataCash::UpdateItem(items[i].first.ItemID, 1);
                                     NHttp::AddItem(items[i].first.ItemID);
                                 }
                             }
@@ -647,7 +649,7 @@ void ChooseMode(sf::RenderWindow& window) {
 
 int main(int argc, char* argv[]) {
     START_EASYLOGGINGPP(argc, argv);
-    el::Configurations conf("logging_config.cfg");
+    el::Configurations conf("client_logging_config.cfg");
     el::Loggers::reconfigureAllLoggers(conf);
 
     NFont::LoadFont();
