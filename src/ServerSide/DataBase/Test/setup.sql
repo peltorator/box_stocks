@@ -1,7 +1,8 @@
 drop table if exists Item;
 create table Item (
     itemID integer primary key,
-    itemName text, weight integer,
+    itemName text,
+    weight integer,
     volume integer,
     cost integer,
     amount integer,

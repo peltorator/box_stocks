@@ -47,3 +47,25 @@ TEST_CASE("Insert-select-delete-select", "[single-file]") {
 
     NDataBase::Close();
 }
+
+TEST_CASE("Shop-test", "[single-file]") {
+    NDataBase::Open("test_db.sqlite");
+
+    string insertItemsQuery = "insert into Item(itemName, weight, volume, cost, amount, image) values ('Sushi', 100, 200, 300, 10, ''), ('Pizza', 150, 250, 350, 4, '');";
+    auto insertItemsResponse = NDataBase::Query(insertItemsQuery);
+    REQUIRE(insertItemsResponse.empty());
+
+    string insertBoxesQuery = "insert into Box(boxName, maxWeight, maxVolume, cost, available, image) values ('small', 100, 200, 300, 1, ''), ('big', 150, 250, 350, 0, '');";
+    auto insertBoxesResponse = NDataBase::Query(insertBoxesQuery);
+    REQUIRE(insertBoxesResponse.empty());
+
+    string selectItemsQuery = "select itemName from Item;";
+    auto selectItemsResponse = NDataBase::Query(selectItemsQuery);
+    REQUIRE(selectItemsResponse == vector<map<string, string>>{{{"itemName", "Sushi"}}, {{"itemName", "Pizza"}}});
+
+    string selectBoxesQuery = "select boxName from Box where available = 1;";
+    auto selectBoxesResponse = NDataBase::Query(selectBoxesQuery);
+    REQUIRE(selectBoxesResponse == vector<map<string, string>>{{{"boxName", "small"}}});
+
+    NDataBase::Close();
+}
