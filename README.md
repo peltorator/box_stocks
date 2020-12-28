@@ -1,4 +1,4 @@
-![](./assets/logo.png =250x)
+<img src="./assets/logo.png" alt="drawing" width="400"/>
 
 # Запуск
 
