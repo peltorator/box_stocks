@@ -1,4 +1,4 @@
-![](assets/logo.png =250x)
+![](./assets/logo.png =250x)
 
 # Запуск
 
