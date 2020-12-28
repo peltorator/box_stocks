@@ -20,9 +20,20 @@ class MyScene(Scene):
 class ExplanationScene(MyScene):
     
     def construct(self):
+        logo = ImageMobject('logo.png')
+        logo.scale(1.5)
+        logo.shift(DOWN)
+        contacts = TextMobject(r'Егор Горбачев (tg: @peltorator)\\Руководитель: Дмитрий Шалымов')
+        contacts.next_to(logo, UP)
         title = TextMobject('Интернет-магазин и задача о рюкзаке')
         self.saveObject(title)
-        title.to_edge(UP)
+        title.next_to(contacts, UP)
+        
+        self.play(Write(title))
+        self.play(Write(contacts))
+        self.play(FadeIn(logo))
+        self.wait(1)
+        self.play(ApplyMethod(title.to_edge, UP), FadeOut(contacts), FadeOut(logo))
 
         scale = 0.5
         circle = Circle(color=YELLOW, fill_color=YELLOW, fill_opacity=0.5)
@@ -35,31 +46,39 @@ class ExplanationScene(MyScene):
         self.saveObject(square)
         square.scale(scale)
         square.to_edge(LEFT)
-        square.next_to(square, DOWN)
+        square.next_to(circle, DOWN)
 
-        self.play(Write(title))
-        self.play(FadeIn(circle), FadeIn(square))
+        triangle = Polygon(np.array([-1, 0, 0]),np.array([0, 1.74, 0]),np.array([1, 0, 0]), color=YELLOW, fill_color=YELLOW, fill_opacity=0.5)
+        self.saveObject(triangle)
+        triangle.scale(scale)
+        triangle.to_edge(LEFT)
+        triangle.next_to(square, DOWN)
+
+        self.wait(2.5)
+        self.play(FadeIn(circle), run_time=0.3)
+        self.play(FadeIn(square), run_time=0.3)
+        self.play(FadeIn(triangle), run_time=0.3)
 
         bigRightLine = Line(np.array([6.5, 2.5, 0]),np.array([6.5, 0, 0]), color=BLUE)
         bigDownLine = Line(np.array([6.5, 0, 0]), np.array([4, 0, 0]), color=BLUE)
         bigLeftLine = Line(np.array([4, 0, 0]), np.array([4, 2.5, 0]), color=BLUE)
         self.saveObjectList([bigRightLine, bigDownLine, bigLeftLine])
 
-        self.play(FadeIn(bigRightLine), FadeIn(bigDownLine), FadeIn(bigLeftLine))
+        self.play(FadeIn(bigRightLine), FadeIn(bigDownLine), FadeIn(bigLeftLine), run_time=0.3)
 
         mediumRightLine = Line(np.array([6.5, -0.5, 0]),np.array([6.5, -2, 0]), color=RED)
         mediumDownLine = Line(np.array([6.5, -2, 0]), np.array([5, -2, 0]), color=RED)
         mediumLeftLine = Line(np.array([5, -2, 0]), np.array([5, -0.5, 0]), color=RED)
         self.saveObjectList([mediumRightLine, mediumDownLine, mediumLeftLine])
         
-        self.play(FadeIn(mediumRightLine), FadeIn(mediumDownLine), FadeIn(mediumLeftLine))
+        self.play(FadeIn(mediumRightLine), FadeIn(mediumDownLine), FadeIn(mediumLeftLine), run_time=0.3)
 
         smallRightLine = Line(np.array([6.5, -2.5, 0]),np.array([6.5, -3.5, 0]), color=GREEN)
         smallDownLine = Line(np.array([6.5, -3.5, 0]), np.array([5.5, -3.5, 0]), color=GREEN)
         smallLeftLine = Line(np.array([5.5, -3.5, 0]), np.array([5.5, -2.5, 0]), color=GREEN)
         self.saveObjectList([smallRightLine, smallDownLine, smallLeftLine])
 
-        self.play(FadeIn(smallRightLine), FadeIn(smallDownLine), FadeIn(smallLeftLine))
+        self.play(FadeIn(smallRightLine), FadeIn(smallDownLine), FadeIn(smallLeftLine), run_time=0.3)
 
         w = TexMobject('w')
         v = TexMobject('v')
@@ -75,27 +94,29 @@ class ExplanationScene(MyScene):
         c.next_to(circle, RIGHT)
         w.shift(UP * 0.3)
         c.shift(DOWN * 0.3)
-        self.play(Write(w), run_time=0.3)
-        self.play(Write(v), run_time=0.3)
-        self.play(Write(c), run_time=0.3)
+        self.wait(2)
+        self.play(Write(w), run_time=1)
+        self.play(Write(v), run_time=1)
+        self.play(Write(c), run_time=1)
 
         maxw = TexMobject('maxw')
-        maxv = TexMobject('maxv')
+        boxv = TexMobject('boxv')
         boxc = TexMobject('boxc')
         maxw.scale(0.8)
-        maxv.scale(0.8)
+        boxv.scale(0.8)
         boxc.scale(0.8)
         maxw.move_to(bigLeftLine.get_center())
-        maxv.move_to(bigLeftLine.get_center())
+        boxv.move_to(bigLeftLine.get_center())
         boxc.move_to(bigLeftLine.get_center())
         maxw.next_to(bigLeftLine, LEFT)
-        maxv.next_to(bigLeftLine, LEFT)
+        boxv.next_to(bigLeftLine, LEFT)
         boxc.next_to(bigLeftLine, LEFT)
         maxw.shift(UP * 0.8)
         boxc.shift(DOWN * 0.8)
-        self.play(Write(maxw), run_time=0.3)
-        self.play(Write(maxv), run_time=0.3)
-        self.play(Write(boxc), run_time=0.3)
+        self.wait(3)
+        self.play(Write(maxw), run_time=2)
+        self.play(Write(boxv), run_time=1.5)
+        self.play(Write(boxc), run_time=1.5)
 
 
         sumW = TexMobject('\sum w_i')
@@ -106,17 +127,19 @@ class ExplanationScene(MyScene):
         group = VGroup(sumW, lessBoxW)
         group.move_to(ORIGIN)
         group.next_to(title, DOWN)
+        self.wait(5)
         self.play(ReplacementTransform(w, sumW), ReplacementTransform(maxw, lessBoxW))
 
         sumV = TexMobject('\sum v_i')
         self.saveObject(sumV)
-        lessBoxV = TexMobject('\le maxv')
+        lessBoxV = TexMobject('\le boxv')
         self.saveObject(lessBoxV)
         lessBoxV.next_to(sumV, RIGHT)
         group2 = VGroup(sumV, lessBoxV)
         group2.move_to(ORIGIN)
         group2.next_to(group, DOWN)
-        self.play(ReplacementTransform(v, sumV), ReplacementTransform(maxv, lessBoxV))
+        self.wait(4.5)
+        self.play(ReplacementTransform(v, sumV), ReplacementTransform(boxv, lessBoxV))
 
         finalCost = TexMobject('FinalCost = ')
         self.saveObject(finalCost)
@@ -129,11 +152,22 @@ class ExplanationScene(MyScene):
         group3 = VGroup(finalCost, sumC, plusBoxC)
         group3.move_to(ORIGIN)
         group3.next_to(group2, DOWN)
-        self.play(ReplacementTransform(c, sumC), ReplacementTransform(boxc, plusBoxC))
-        self.play(Write(finalCost))
+        self.wait(3)
+        self.play(Write(finalCost), run_time=1.5)
+        self.play(ReplacementTransform(c, sumC), run_time=1.5)
+        self.play(ReplacementTransform(boxc, plusBoxC), run_time=1.5)
 
+        self.wait(4)
         self.play(Indicate(sumC))
+        self.wait(3.5)
         self.play(Indicate(plusBoxC))
+
+        itemsGroup = VGroup(circle, square, triangle)
+        newGroup = itemsGroup.copy()
+        newGroup.scale(0.7)
+        newGroup.move_to(np.array([5.25, 1.25, 0]))
+        self.wait(3.5)
+        self.play(Transform(itemsGroup, newGroup))
 
         self.wait(1)
         self.wanish()
@@ -142,15 +176,16 @@ class ExplanationScene(MyScene):
 class SolutionScene(MyScene):
 
     def construct(self):
-        self.wait(1)
+        self.wait(7)
         self.badSolutions()
-        self.wait(1)
+        self.wait(2.5)
         self.wanish()
+        self.wait(2)
         self.mySolution()
-        self.wait(1)
+        self.wait(7.5)
         self.wanish()
         self.timeComplexity()
-        self.wait(1)
+        self.wait(15)
         self.wanish()
 
     def badSolutions(self):
@@ -158,17 +193,19 @@ class SolutionScene(MyScene):
         self.saveObject(bigWeight)
         bigWeight.shift(UP)
         self.play(Write(bigWeight))
+        self.wait(2)
         self.play(Indicate(bigWeight, color=RED))
 
-        self.wait(1)
+        self.wait(4)
 
         greedy = TextMobject('Жадность')
         self.saveObject(greedy)
         greedy.shift(DOWN)
         self.play(Write(greedy))
+        self.wait(1.5)
         self.play(Indicate(greedy, color=RED))
 
-        self.wait(1)
+        self.wait(4)
 
         L1 = Line(np.array([-4, 3, 0]), np.array([4, -3, 0]), color=RED)
         self.saveObject(L1)
@@ -185,12 +222,14 @@ class SolutionScene(MyScene):
         items = TextMobject('Заказали n предметов')
         self.saveObject(items)
         items.next_to(title, DOWN)
+        self.wait(1.5)
         self.play(Write(items))
 
         mask = TexMobject(r'100101\ldots011010')
         self.saveObject(mask)
         mask.next_to(items, DOWN)
         mask.shift(DOWN)
+        self.wait(3)
         self.play(Write(mask))
 
         brace = Brace(mask, UP)
@@ -199,10 +238,11 @@ class SolutionScene(MyScene):
         self.saveObject(braceText)
         self.play(GrowFromCenter(brace), Write(braceText))
 
-        dp = TextMobject('dp[mask]')
+        dp = TextMobject('minCost[mask]')
         self.saveObject(dp)
         dp.next_to(mask, DOWN)
         dp.shift(DOWN * 0.8)
+        self.wait(11)
         self.play(Write(dp))
         
         leftArrow = Arrow(DOWN * 1, DOWN * 2.2 + LEFT * 4)
@@ -212,6 +252,7 @@ class SolutionScene(MyScene):
         self.saveObject(boxMask)
         boxMask.next_to(leftArrow, DOWN)
         boxMask.shift(LEFT * 1.5)
+        self.wait(4.5)
         self.play(GrowArrow(leftArrow), Write(boxMask))
 
         rightArrow = Arrow(DOWN * 1, DOWN * 2.2 + RIGHT * 4)
@@ -221,25 +262,29 @@ class SolutionScene(MyScene):
         self.saveObject(otherMask)
         otherMask.next_to(rightArrow, DOWN)
         otherMask.shift(RIGHT * 1.5)
+        self.wait(4)
         self.play(GrowArrow(rightArrow), Write(otherMask))
 
     def timeComplexity(self):
-        formula = TexMobject(r'dp[mask] = \min_{boxMask} dp[otherMask] + cost(boxMask)')
+        formula = TexMobject(r'minCost[mask] = \min_{boxMask}  cost(boxMask) + minCost[otherMask]')
         self.saveObject(formula)
+        formula.scale(0.85)
         formula.shift(UP)
         self.play(Write(formula))
 
         time = TexMobject(r'Time = \mathbb{O}\left(3^n \cdot k\right)')
         self.saveObject(time)
         time.shift(DOWN)
+        self.wait(11)
         self.play(Write(time))
 
 
 class RealisationScene(MyScene):
 
     def construct(self):
+        self.wait(18)
         self.makeScheme()
-        self.wait(1)
+        self.wait(4)
         self.wanish()
 
     def makeScheme(self):
@@ -248,11 +293,11 @@ class RealisationScene(MyScene):
         clientRect.to_edge(LEFT)
         clientRect.shift(DOWN)
 
-        clientText = TextMobject(r'Клиент\\Графическое приложение\\C++\\SFML\\Логирование: easylogging')
+        clientText = TextMobject(r'Клиент\\Графическое приложение\\C++\\Графика: SFML\\Логирование: easylogging')
         clientText.scale(0.7)
         self.saveObject(clientText)
         clientText.move_to(clientRect.get_center())
-
+        
         self.play(FadeIn(clientRect), Write(clientText))
 
 
@@ -272,7 +317,7 @@ class RealisationScene(MyScene):
         http.scale(0.7)
         self.saveObject(http)
         http.next_to(clientServerArrow, UP)
-
+        self.wait(3)
         self.play(FadeIn(serverRect), Write(serverText), GrowArrow(clientServerArrow), Write(http))
 
 
@@ -293,7 +338,7 @@ class RealisationScene(MyScene):
         self.saveObject(cpython)
         cpython.next_to(serverShopArrow, RIGHT)
         cpython.shift(LEFT * 0.7 + UP * 0.3)
-
+        self.wait(3)
         self.play(FadeIn(shopRect), Write(shopText), GrowArrow(serverShopArrow), Write(cpython))
 
 
@@ -308,5 +353,20 @@ class RealisationScene(MyScene):
 
         shopDBArrow = Arrow(UP * 2.5 + RIGHT * 1, UP * 2.5 + RIGHT * 3.5)
         self.saveObject(shopDBArrow)
-
+        self.wait(8.5)
         self.play(FadeIn(dbRect), Write(dbText), GrowArrow(shopDBArrow))
+
+
+class FinalScene(Scene):
+
+    def construct(self):
+        text2 = TextMobject('Спасибо за внимание!')
+        text1 = TextMobject('Внимание!!!')
+        text1.next_to(text2, UP)
+        text3 = TextMobject(r'Репозиторий гитхаб: github.com/Peltorator/box\_stocks')
+        text3.next_to(text2, DOWN)
+        self.wait(25)
+        self.play(Write(text1))
+        self.play(Write(text2))
+        self.play(Write(text3))
+        self.wait(1)
