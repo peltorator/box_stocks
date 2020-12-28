@@ -16,7 +16,7 @@
 `sqlite3 test_db.sqlite < setup.sql && g++ -std=c++17 tests_database.cpp -DTEST -o tests_database -lsqlite3 && ./tests_database`
 
 Изначальная настройка магазина (для удобства тестирования и добавления товаров на стороне сервера):
-`g++ -std=c++17 setup.cpp -o setup -lsqlite3 && ./setup`
+`g++ -std=c++17 setup.cpp -o setup -DTEST -lsqlite3 && ./setup`
 
 # Формализация задачи:
 
