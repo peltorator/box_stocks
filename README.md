@@ -12,7 +12,7 @@
 Юнит тесты магазина:
 `g++ -std=c++17 tests_shop.cpp -o tests_shop -DTEST -lsqlite3 && ./tests_shop`
 
-Юнит тесты для работы с базами данных:
+Юнит тесты для работы с базой данных:
 `sqlite3 test_db.sqlite < setup.sql && g++ -std=c++17 tests_database.cpp -DTEST -o tests_database -lsqlite3 && ./tests_database`
 
 Изначальная настройка магазина (для удобства тестирования и добавления товаров на стороне сервера):
