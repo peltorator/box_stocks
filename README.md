@@ -1,3 +1,7 @@
+# BoxStocks Internet Marketplace
+
+Video Presentation: https://youtu.be/OpSSHRPemw4
+
 <img src="./assets/logo.png" alt="drawing" width="400"/>
 
 # Запуск
